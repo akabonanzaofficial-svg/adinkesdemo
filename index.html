@@ -63,12 +63,6 @@ const { useState, useEffect } = React;
           ]
         };
 
-        const instructors = [
-          { id: 1, name: 'Dr. Andi Pratama, Sp.EM', role: 'Spesialis Ahli Gawat Darurat', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' },
-          { id: 2, name: 'Ns. Siti Aminah, S.Kep., M.Kep', role: 'Konsultan Manajemen Keperawatan', img: 'https://images.unsplash.com/photo-1594824436998-d1d7847c2121?auto=format&fit=crop&w=300&q=80' },
-          { id: 3, name: 'Drg. Budi Santoso, MARS', role: 'Ahli K3 & Manajemen Rumah Sakit', img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80' },
-        ];
-
         const newsList = [
           { id: 1, title: 'Pentingnya Sertifikasi BHD bagi Seluruh Karyawan Rumah Sakit di Era Modern', date: '10 Juni 2026', category: 'Artikel', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=500&q=80' },
           { id: 2, title: 'MedikaEdu Sukses Gelar Pelatihan Manajemen Bangsal Angkatan ke-15', date: '05 Juni 2026', category: 'Berita', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=500&q=80' },
@@ -109,6 +103,8 @@ const { useState, useEffect } = React;
           // --- STATE UNTUK DATA DARI SUPABASE ---
           const [programs, setPrograms] = useState([]);
           const [loading, setLoading] = useState(true);
+          const [instructors, setInstructors] = useState([]);
+          const [instructorsLoading, setInstructorsLoading] = useState(true);      
 
           // --- STATE PROFIL LEMBAGA ---
           const [profile, setProfile] = useState(null);
@@ -152,7 +148,25 @@ const { useState, useEffect } = React;
             }
             fetchProfile();
           }, []);
+                
+          useEffect(() => {
+  async function fetchInstructors() {
+    setInstructorsLoading(true);
+    const { data, error } = await supabase
+      .from('instructors')
+      .select('*')
+      .order('id', { ascending: true });
 
+    if (error) {
+      console.error('Error fetching instructors:', error);
+      setInstructors([]);
+    } else {
+      setInstructors(data || []);
+    }
+    setInstructorsLoading(false);
+  }
+  fetchInstructors();
+}, []);
           // --- FUNGSI NAVIGASI ---
           const navigateToSchedule = (category) => {
             setScheduleCategory(category);
@@ -555,25 +569,41 @@ const { useState, useEffect } = React;
                 );
 
               case 'Pengajar':
-                return (
-                  <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-                    <div className="text-center mb-12"><h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Pengajar Ahli</h2></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {instructors.map((inst) => (
-                        <div key={inst.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 text-center group">
-                          <div className="h-48 overflow-hidden relative">
-                            <img src={inst.img} alt={inst.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          </div>
-                          <div className="px-6 pb-8 pt-6">
-                            <h3 className="text-xl font-bold text-slate-800 mb-1">{inst.name}</h3>
-                            <p className="text-alo-blue text-sm font-medium mb-4">{inst.role}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-
+  if (instructorsLoading) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+        <p className="text-slate-500 mt-4">Memuat data pengajar...</p>
+      </div>
+    );
+  }
+  if (instructors.length === 0) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <p className="text-slate-500">Belum ada data pengajar.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Pengajar Ahli</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {instructors.map((inst) => (
+          <div key={inst.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 text-center group">
+            <div className="h-48 overflow-hidden relative">
+              <img src={inst.img} alt={inst.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div className="px-6 pb-8 pt-6">
+              <h3 className="text-xl font-bold text-slate-800 mb-1">{inst.name}</h3>
+              <p className="text-alo-blue text-sm font-medium mb-4">{inst.role}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
               case 'Berita':
                 return (
                   <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
