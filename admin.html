@@ -58,21 +58,7 @@
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        // --- MOCK DATA UNTUK PROFIL LEMBAGA (sementara) ---
-        const mockProfile = {
-          name: 'Medika Edukasi Nusantara',
-          tagline: 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia',
-          logo: '',
-          banner: 'https://images.unsplash.com/photo-1537368...',
-          visi: 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara yang menghasilkan tenaga kesehatan profesional, kompeten, dan beretika.',
-          misi: '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...',
-          alamat: 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345',
-          telepon: '021 - 888 9999',
-          whatsapp: '+62 812 3456 7890',
-          email: 'halo@medikaedu.co.id',
-          instagram: 'https://instagram.com/medikaedu',
-        };
-
+        // --- MOCK DATA UNTUK STRUKTUR ORGANISASI (sementara) ---
         const mockStruktur = [
           { id: 1, name: 'Dr. Hendra Wijaya, MARS', role: 'Direktur Utama' },
           { id: 2, name: 'Ns. Ratna Sari, M.Kes', role: 'Manajer Operasional' },
@@ -95,12 +81,26 @@
           const [users, setUsers] = useState([]);
           const [registrations, setRegistrations] = useState([]);
 
-          // --- STATE UNTUK FORM DI MODAL (dipindahkan ke tingkat atas) ---
-          // Form Program
+          // --- STATE PROFIL LEMBAGA ---
+          const [profile, setProfile] = useState({
+            name: '',
+            tagline: '',
+            logo_url: '',
+            banner_url: '',
+            visi: '',
+            misi: '',
+            alamat: '',
+            telepon: '',
+            whatsapp: '',
+            email: '',
+            instagram: ''
+          });
+          const [profileLoading, setProfileLoading] = useState(true);
+
+          // --- STATE UNTUK FORM DI MODAL ---
           const [programForm, setProgramForm] = useState({ title: '', description: '', icon: 'auto_stories', modul_url: '' });
           const [editingProgramId, setEditingProgramId] = useState(null);
 
-          // Form Jadwal
           const [scheduleForm, setScheduleForm] = useState({
             category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta',
             price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80',
@@ -108,21 +108,17 @@
           });
           const [editingScheduleId, setEditingScheduleId] = useState(null);
 
-          // Form Pengajar
           const [instructorForm, setInstructorForm] = useState({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' });
           const [editingInstructorId, setEditingInstructorId] = useState(null);
 
-          // Form Sertifikat
           const [sertifikatUrl, setSertifikatUrl] = useState('');
           const [sertifikatRegId, setSertifikatRegId] = useState(null);
 
-          // Form Berita (editor)
           const [editorTitle, setEditorTitle] = useState('');
           const [editorContent, setEditorContent] = useState('');
           const [editorCategory, setEditorCategory] = useState('Berita Lembaga');
           const [editingNewsId, setEditingNewsId] = useState(null);
 
-          // Form Galeri
           const [galleryUrl, setGalleryUrl] = useState('');
 
           // --- RESET FUNCTIONS ---
@@ -148,6 +144,50 @@
           const resetSertifikatForm = () => {
             setSertifikatUrl('');
             setSertifikatRegId(null);
+          };
+
+          // --- FUNGSI FETCH PROFILE ---
+          const fetchProfile = async () => {
+            setProfileLoading(true);
+            const { data, error } = await supabase
+              .from('institution_profile')
+              .select('*')
+              .eq('id', 1)
+              .single();
+            if (error) {
+              console.error('Error fetch profile:', error);
+              setProfile({
+                name: '',
+                tagline: '',
+                logo_url: '',
+                banner_url: '',
+                visi: '',
+                misi: '',
+                alamat: '',
+                telepon: '',
+                whatsapp: '',
+                email: '',
+                instagram: ''
+              });
+            } else {
+              setProfile(data || {});
+            }
+            setProfileLoading(false);
+          };
+
+          // --- FUNGSI UPDATE PROFILE ---
+          const updateProfile = async (updatedData) => {
+            const { error } = await supabase
+              .from('institution_profile')
+              .update(updatedData)
+              .eq('id', 1);
+            if (error) {
+              showToast('Gagal update profil: ' + error.message);
+              return false;
+            }
+            showToast('Profil berhasil diperbarui!');
+            await fetchProfile();
+            return true;
           };
 
           // --- FETCH SEMUA DATA ---
@@ -185,6 +225,9 @@
 
                 if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error);
                 else setRegistrations(registrationsRes.data || []);
+
+                // Fetch profil lembaga
+                await fetchProfile();
 
               } catch (err) {
                 console.error('Gagal fetch data:', err);
@@ -341,7 +384,7 @@
             showToast('Sertifikat berhasil diupload!');
           };
 
-          // --- FUNGSI UNTUK MEMBUKA MODAL DENGAN DATA ---
+          // --- FUNGSI UNTUK MEMBUKA MODAL ---
           const openProgramModal = (data = null) => {
             if (data) {
               setProgramForm({ title: data.title, description: data.description || '', icon: data.icon || 'auto_stories', modul_url: data.modul_url || '' });
@@ -421,92 +464,141 @@
             );
           };
 
-          // --- RENDER PROFIL (mock) ---
-          const renderProfil = () => (
-            <div className="space-y-6 animate-fade-in">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-slate-800">Pengaturan Profil Lembaga</h2>
-                <button onClick={() => showToast('Profil lembaga berhasil diperbarui!')} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
-                  <span className="material-symbols-outlined text-[18px]">save</span> Simpan Perubahan
-                </button>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Identitas Utama</h3>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label>
-                    <input type="text" defaultValue={mockProfile.name} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label>
-                    <input type="text" defaultValue={mockProfile.tagline} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label>
-                      <input type="text" placeholder="https://..." className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label>
-                      <input type="text" defaultValue={mockProfile.banner} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label>
-                    <textarea rows="2" defaultValue={mockProfile.visi} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label>
-                    <textarea rows="3" defaultValue={mockProfile.misi} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                  </div>
+          // --- RENDER PROFIL (terhubung ke Supabase) ---
+          const renderProfil = () => {
+            // State lokal untuk form
+            const [formData, setFormData] = useState({
+              name: profile.name || '',
+              tagline: profile.tagline || '',
+              logo_url: profile.logo_url || '',
+              banner_url: profile.banner_url || '',
+              visi: profile.visi || '',
+              misi: profile.misi || '',
+              alamat: profile.alamat || '',
+              telepon: profile.telepon || '',
+              whatsapp: profile.whatsapp || '',
+              email: profile.email || '',
+              instagram: profile.instagram || '',
+            });
+
+            // Update formData ketika profile berubah
+            useEffect(() => {
+              setFormData({
+                name: profile.name || '',
+                tagline: profile.tagline || '',
+                logo_url: profile.logo_url || '',
+                banner_url: profile.banner_url || '',
+                visi: profile.visi || '',
+                misi: profile.misi || '',
+                alamat: profile.alamat || '',
+                telepon: profile.telepon || '',
+                whatsapp: profile.whatsapp || '',
+                email: profile.email || '',
+                instagram: profile.instagram || '',
+              });
+            }, [profile]);
+
+            const handleSubmit = async (e) => {
+              e.preventDefault();
+              await updateProfile(formData);
+            };
+
+            if (profileLoading) {
+              return (
+                <div className="flex items-center justify-center h-full">
+                  <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                  <span className="ml-3 text-slate-500">Memuat profil...</span>
                 </div>
-                <div className="space-y-6">
+              );
+            }
+
+            return (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-slate-800">Pengaturan Profil Lembaga</h2>
+                  <button type="submit" form="profileForm" className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">save</span> Simpan Perubahan
+                  </button>
+                </div>
+                <form id="profileForm" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                    <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Informasi Kontak & Medsos</h3>
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Identitas Utama</h3>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
-                      <textarea rows="2" defaultValue={mockProfile.alamat} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label>
+                      <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label>
+                      <input type="text" value={formData.tagline} onChange={(e) => setFormData({...formData, tagline: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">No. Telepon</label>
-                        <input type="text" defaultValue={mockProfile.telepon} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label>
+                        <input type="text" value={formData.logo_url} onChange={(e) => setFormData({...formData, logo_url: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label>
-                        <input type="text" defaultValue={mockProfile.whatsapp} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label>
+                        <input type="text" value={formData.banner_url} onChange={(e) => setFormData({...formData, banner_url: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
-                        <input type="email" defaultValue={mockProfile.email} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Instagram</label>
-                        <input type="text" defaultValue={mockProfile.instagram} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label>
+                      <textarea rows="2" value={formData.visi} onChange={(e) => setFormData({...formData, visi: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label>
+                      <textarea rows="3" value={formData.misi} onChange={(e) => setFormData({...formData, misi: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
                     </div>
                   </div>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div className="flex justify-between items-center mb-4 border-b pb-2">
-                      <h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3>
-                      <button onClick={() => setActiveModal('struktur')} className="text-sm text-alo-blue font-bold flex items-center hover:underline"><span className="material-symbols-outlined text-[16px]">add</span> Tambah</button>
-                    </div>
-                    <div className="space-y-3">
-                      {mockStruktur.map(item => (
-                        <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
-                          <div><p className="font-bold text-sm text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.role}</p></div>
-                          <div className="flex gap-2">
-                            <button onClick={() => setActiveModal('struktur')} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
-                            <button onClick={() => showToast('Data dihapus.')} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
-                          </div>
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                      <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Informasi Kontak & Medsos</h3>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
+                        <textarea rows="2" value={formData.alamat} onChange={(e) => setFormData({...formData, alamat: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1">No. Telepon</label>
+                          <input type="text" value={formData.telepon} onChange={(e) => setFormData({...formData, telepon: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                         </div>
-                      ))}
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label>
+                          <input type="text" value={formData.whatsapp} onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                          <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-1">Instagram URL</label>
+                          <input type="text" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                      <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3>
+                        <button onClick={() => setActiveModal('struktur')} className="text-sm text-alo-blue font-bold flex items-center hover:underline"><span className="material-symbols-outlined text-[16px]">add</span> Tambah</button>
+                      </div>
+                      <div className="space-y-3">
+                        {mockStruktur.map(item => (
+                          <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
+                            <div><p className="font-bold text-sm text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.role}</p></div>
+                            <div className="flex gap-2">
+                              <button onClick={() => setActiveModal('struktur')} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                              <button onClick={() => showToast('Data dihapus.')} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </form>
               </div>
-            </div>
-          );
+            );
+          };
 
           // --- RENDER PROGRAM ---
           const renderProgram = () => (
@@ -943,7 +1035,7 @@
             );
           };
 
-          // --- MODAL RENDER (tanpa useState di dalamnya) ---
+          // --- MODAL RENDER ---
           const renderModal = () => {
             if (!activeModal) return null;
 
