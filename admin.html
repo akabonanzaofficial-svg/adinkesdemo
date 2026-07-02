@@ -30,13 +30,11 @@
         font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
       
-      /* Scrollbar styling */
       ::-webkit-scrollbar { width: 8px; height: 8px; }
       ::-webkit-scrollbar-track { background: #f1f5f9; }
       ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
       ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-      /* Animasi */
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
     </style>
@@ -84,7 +82,7 @@
         function AdminDashboard() {
           const [activeMenu, setActiveMenu] = useState('Dashboard');
           const [jadwalTab, setJadwalTab] = useState('Pelatihan');
-          const [activeModal, setActiveModal] = useState(null); // ID modal
+          const [activeModal, setActiveModal] = useState(null);
           const [toastMessage, setToastMessage] = useState('');
           const [loading, setLoading] = useState(true);
 
@@ -94,15 +92,69 @@
           const [instructors, setInstructors] = useState([]);
           const [news, setNews] = useState([]);
           const [gallery, setGallery] = useState([]);
-          const [users, setUsers] = useState([]); // peserta (role = 'member')
+          const [users, setUsers] = useState([]);
           const [registrations, setRegistrations] = useState([]);
+
+          // --- STATE UNTUK FORM DI MODAL (dipindahkan ke tingkat atas) ---
+          // Form Program
+          const [programForm, setProgramForm] = useState({ title: '', description: '', icon: 'auto_stories', modul_url: '' });
+          const [editingProgramId, setEditingProgramId] = useState(null);
+
+          // Form Jadwal
+          const [scheduleForm, setScheduleForm] = useState({
+            category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta',
+            price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80',
+            description: ''
+          });
+          const [editingScheduleId, setEditingScheduleId] = useState(null);
+
+          // Form Pengajar
+          const [instructorForm, setInstructorForm] = useState({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' });
+          const [editingInstructorId, setEditingInstructorId] = useState(null);
+
+          // Form Sertifikat
+          const [sertifikatUrl, setSertifikatUrl] = useState('');
+          const [sertifikatRegId, setSertifikatRegId] = useState(null);
+
+          // Form Berita (editor)
+          const [editorTitle, setEditorTitle] = useState('');
+          const [editorContent, setEditorContent] = useState('');
+          const [editorCategory, setEditorCategory] = useState('Berita Lembaga');
+          const [editingNewsId, setEditingNewsId] = useState(null);
+
+          // Form Galeri
+          const [galleryUrl, setGalleryUrl] = useState('');
+
+          // --- RESET FUNCTIONS ---
+          const resetProgramForm = () => {
+            setProgramForm({ title: '', description: '', icon: 'auto_stories', modul_url: '' });
+            setEditingProgramId(null);
+          };
+
+          const resetScheduleForm = () => {
+            setScheduleForm({
+              category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta',
+              price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80',
+              description: ''
+            });
+            setEditingScheduleId(null);
+          };
+
+          const resetInstructorForm = () => {
+            setInstructorForm({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' });
+            setEditingInstructorId(null);
+          };
+
+          const resetSertifikatForm = () => {
+            setSertifikatUrl('');
+            setSertifikatRegId(null);
+          };
 
           // --- FETCH SEMUA DATA ---
           useEffect(() => {
             async function fetchAllData() {
               setLoading(true);
               try {
-                // Ambil semua data secara paralel
                 const [programsRes, schedulesRes, instructorsRes, newsRes, galleryRes, usersRes, registrationsRes] = await Promise.all([
                   supabase.from('programs').select('*').order('id', { ascending: true }),
                   supabase.from('schedules').select('*').order('id', { ascending: true }),
@@ -143,13 +195,13 @@
             fetchAllData();
           }, []);
 
-          // --- FUNGSI CRUD UMUM ---
+          // --- FUNGSI CRUD ---
           const showToast = (message) => {
             setToastMessage(message);
             setTimeout(() => setToastMessage(''), 3000);
           };
 
-          // --- CRUD PROGRAMS ---
+          // CRUD Programs
           const addProgram = async (data) => {
             const { error } = await supabase.from('programs').insert([data]);
             if (error) { showToast('Gagal tambah program: ' + error.message); return; }
@@ -174,7 +226,7 @@
             showToast('Program dihapus.');
           };
 
-          // --- CRUD SCHEDULES ---
+          // CRUD Schedules
           const addSchedule = async (data) => {
             const { error } = await supabase.from('schedules').insert([data]);
             if (error) { showToast('Gagal tambah jadwal: ' + error.message); return; }
@@ -199,7 +251,7 @@
             showToast('Jadwal dihapus.');
           };
 
-          // --- CRUD INSTRUCTORS ---
+          // CRUD Instructors
           const addInstructor = async (data) => {
             const { error } = await supabase.from('instructors').insert([data]);
             if (error) { showToast('Gagal tambah pengajar: ' + error.message); return; }
@@ -224,7 +276,7 @@
             showToast('Pengajar dihapus.');
           };
 
-          // --- CRUD NEWS ---
+          // CRUD News
           const addNews = async (data) => {
             const { error } = await supabase.from('news').insert([data]);
             if (error) { showToast('Gagal tambah berita: ' + error.message); return; }
@@ -249,7 +301,7 @@
             showToast('Berita dihapus.');
           };
 
-          // --- CRUD GALLERY ---
+          // CRUD Gallery
           const addGallery = async (img_url) => {
             const { error } = await supabase.from('gallery').insert([{ img_url }]);
             if (error) { showToast('Gagal upload galeri: ' + error.message); return; }
@@ -266,14 +318,13 @@
             showToast('Foto dihapus.');
           };
 
-          // --- FUNGSI UNTUK PESERTA (verifikasi & upload sertifikat) ---
+          // Fungsi untuk peserta
           const approvePayment = async (registrationId) => {
             const { error } = await supabase
               .from('registrations')
               .update({ status_pembayaran: 'Lunas' })
               .eq('id', registrationId);
             if (error) { showToast('Gagal verifikasi: ' + error.message); return; }
-            // Refresh registrations
             const { data: newData } = await supabase.from('registrations').select('*').order('id', { ascending: true });
             setRegistrations(newData);
             showToast('Pembayaran berhasil diverifikasi!');
@@ -290,39 +341,87 @@
             showToast('Sertifikat berhasil diupload!');
           };
 
-          // --- Menghitung statistik untuk Dashboard ---
-          const totalPrograms = programs.length;
-          const totalSchedules = schedules.length;
-          const totalInstructors = instructors.length;
-          const totalUsers = users.length;
-          const pendingRegistrations = registrations.filter(r => r.status_pembayaran === 'Menunggu Pembayaran' || r.status_pembayaran === 'Menunggu Cek').length;
+          // --- FUNGSI UNTUK MEMBUKA MODAL DENGAN DATA ---
+          const openProgramModal = (data = null) => {
+            if (data) {
+              setProgramForm({ title: data.title, description: data.description || '', icon: data.icon || 'auto_stories', modul_url: data.modul_url || '' });
+              setEditingProgramId(data.id);
+            } else {
+              resetProgramForm();
+            }
+            setActiveModal('program');
+          };
+
+          const openScheduleModal = (data = null) => {
+            if (data) {
+              setScheduleForm({
+                category: data.category || 'Pelatihan',
+                course: data.course || '',
+                date: data.date || '',
+                time: data.time || '',
+                quota: data.quota || '20 Peserta',
+                price: data.price || 'Rp 0',
+                status: data.status || 'Tersedia',
+                img: data.img || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80',
+                description: data.description || '',
+              });
+              setEditingScheduleId(data.id);
+            } else {
+              resetScheduleForm();
+            }
+            setActiveModal('schedule');
+          };
+
+          const openInstructorModal = (data = null) => {
+            if (data) {
+              setInstructorForm({ name: data.name, role: data.role || '', img: data.img || 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' });
+              setEditingInstructorId(data.id);
+            } else {
+              resetInstructorForm();
+            }
+            setActiveModal('instructor');
+          };
+
+          const openSertifikatModal = (reg) => {
+            setSertifikatUrl('');
+            setSertifikatRegId(reg.id);
+            setActiveModal('sertifikat');
+          };
 
           // --- RENDER DASHBOARD ---
-          const renderDashboard = () => (
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-2xl font-bold text-slate-800">Ringkasan Sistem</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-green-500 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">auto_stories</span></div>
-                  <div><p className="text-sm text-slate-500 font-medium">Program</p><h3 className="text-2xl font-bold text-slate-800">{totalPrograms}</h3></div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-orange-500 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">calendar_month</span></div>
-                  <div><p className="text-sm text-slate-500 font-medium">Jadwal Aktif</p><h3 className="text-2xl font-bold text-slate-800">{totalSchedules}</h3></div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">groups</span></div>
-                  <div><p className="text-sm text-slate-500 font-medium">Peserta Terdaftar</p><h3 className="text-2xl font-bold text-slate-800">{totalUsers}</h3></div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-red-500 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">pending_actions</span></div>
-                  <div><p className="text-sm text-slate-500 font-medium">Menunggu Verifikasi</p><h3 className="text-2xl font-bold text-slate-800">{pendingRegistrations}</h3></div>
+          const renderDashboard = () => {
+            const totalPrograms = programs.length;
+            const totalSchedules = schedules.length;
+            const totalInstructors = instructors.length;
+            const totalUsers = users.length;
+            const pendingRegistrations = registrations.filter(r => r.status_pembayaran === 'Menunggu Cek' || r.status_pembayaran === 'Menunggu Pembayaran').length;
+
+            return (
+              <div className="space-y-6 animate-fade-in">
+                <h2 className="text-2xl font-bold text-slate-800">Ringkasan Sistem</h2>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-green-500 hover:shadow-md transition-shadow cursor-pointer">
+                    <div className="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">auto_stories</span></div>
+                    <div><p className="text-sm text-slate-500 font-medium">Program</p><h3 className="text-2xl font-bold text-slate-800">{totalPrograms}</h3></div>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-orange-500 hover:shadow-md transition-shadow cursor-pointer">
+                    <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">calendar_month</span></div>
+                    <div><p className="text-sm text-slate-500 font-medium">Jadwal Aktif</p><h3 className="text-2xl font-bold text-slate-800">{totalSchedules}</h3></div>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow cursor-pointer">
+                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">groups</span></div>
+                    <div><p className="text-sm text-slate-500 font-medium">Peserta Terdaftar</p><h3 className="text-2xl font-bold text-slate-800">{totalUsers}</h3></div>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-red-500 hover:shadow-md transition-shadow cursor-pointer">
+                    <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">pending_actions</span></div>
+                    <div><p className="text-sm text-slate-500 font-medium">Menunggu Verifikasi</p><h3 className="text-2xl font-bold text-slate-800">{pendingRegistrations}</h3></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
+            );
+          };
 
-          // --- RENDER PROFIL (masih mock) ---
+          // --- RENDER PROFIL (mock) ---
           const renderProfil = () => (
             <div className="space-y-6 animate-fade-in">
               <div className="flex justify-between items-center">
@@ -417,7 +516,7 @@
                   <h2 className="text-2xl font-bold text-slate-800">Kelola Program Utama</h2>
                   <p className="text-slate-500 text-sm">Manajemen modul dan kurikulum pelatihan yang ditawarkan lembaga.</p>
                 </div>
-                <button onClick={() => setActiveModal('program')} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                <button onClick={() => openProgramModal()} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
                   <span className="material-symbols-outlined text-[18px]">add_circle</span> Tambah Program
                 </button>
               </div>
@@ -452,7 +551,7 @@
                           </td>
                           <td className="p-4 text-center">
                             <div className="flex justify-center gap-2">
-                              <button onClick={() => setActiveModal({ type: 'edit_program', data: prog })} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                              <button onClick={() => openProgramModal(prog)} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
                               <button onClick={() => deleteProgram(prog.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button>
                             </div>
                           </td>
@@ -478,7 +577,7 @@
                     <h2 className="text-2xl font-bold text-slate-800">Kelola Jadwal & Acara</h2>
                     <p className="text-slate-500 text-sm">Atur ketersediaan tiket pelatihan, webinar, dan workshop.</p>
                   </div>
-                  <button onClick={() => setActiveModal('jadwal')} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                  <button onClick={() => openScheduleModal()} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
                     <span className="material-symbols-outlined text-[18px]">add_circle</span> Tambah Jadwal Baru
                   </button>
                 </div>
@@ -504,9 +603,8 @@
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-sm">
                         {filteredSchedules.map(sch => {
-                          // Hitung progress kuota (misal dari data)
                           const quotaNum = parseInt(sch.quota) || 20;
-                          const filled = 12; // mock, nanti bisa dari registrasi
+                          const filled = 12;
                           const percent = Math.min(100, Math.round((filled / quotaNum) * 100));
                           return (
                             <tr key={sch.id} className="hover:bg-slate-50 transition-colors">
@@ -537,7 +635,7 @@
                               </td>
                               <td className="p-4 text-center">
                                 <div className="flex justify-center gap-2">
-                                  <button onClick={() => setActiveModal({ type: 'edit_jadwal', data: sch })} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                                  <button onClick={() => openScheduleModal(sch)} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
                                   <button onClick={() => deleteSchedule(sch.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button>
                                 </div>
                               </td>
@@ -557,7 +655,6 @@
 
           // --- RENDER PESERTA ---
           const renderPeserta = () => {
-            // Gabungkan users dengan registrations
             const pesertaWithReg = users.map(user => {
               const reg = registrations.find(r => r.user_id === user.id);
               return { ...user, registration: reg || null };
@@ -628,7 +725,7 @@
                                     <span className="text-xs font-bold text-green-600">Tersedia</span>
                                   </div>
                                 ) : reg && reg.status_pembayaran === 'Lunas' ? (
-                                  <button onClick={() => setActiveModal({ type: 'upload_sertifikat', data: reg })} className="px-3 py-1.5 bg-blue-50 text-alo-blue rounded border border-blue-200 hover:bg-blue-100 font-semibold text-xs flex items-center gap-1 mx-auto transition-colors">
+                                  <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-50 text-alo-blue rounded border border-blue-200 hover:bg-blue-100 font-semibold text-xs flex items-center gap-1 mx-auto transition-colors">
                                     <span className="material-symbols-outlined text-[14px]">upload</span> Upload
                                   </button>
                                 ) : (
@@ -642,7 +739,7 @@
                                   </button>
                                 )}
                                 {reg && reg.status_pembayaran === 'Lunas' && !reg.sertifikat_url && (
-                                  <button onClick={() => setActiveModal({ type: 'upload_sertifikat', data: reg })} className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors">
+                                  <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors">
                                     <span className="material-symbols-outlined text-[14px]">upload</span> Upload
                                   </button>
                                 )}
@@ -669,7 +766,7 @@
                   <h2 className="text-2xl font-bold text-slate-800">Data Pengajar / Instruktur</h2>
                   <p className="text-slate-500 text-sm">Kelola profil tenaga ahli yang akan ditampilkan di website publik.</p>
                 </div>
-                <button onClick={() => setActiveModal('pengajar')} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                <button onClick={() => openInstructorModal()} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
                   <span className="material-symbols-outlined text-[18px]">person_add</span> Tambah Pengajar
                 </button>
               </div>
@@ -677,7 +774,7 @@
                 {instructors.map(inst => (
                   <div key={inst.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center relative group">
                     <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                      <button onClick={() => setActiveModal({ type: 'edit_pengajar', data: inst })} className="bg-blue-50 text-blue-500 p-1.5 rounded hover:bg-blue-100"><span className="material-symbols-outlined text-[16px]">edit</span></button>
+                      <button onClick={() => openInstructorModal(inst)} className="bg-blue-50 text-blue-500 p-1.5 rounded hover:bg-blue-100"><span className="material-symbols-outlined text-[16px]">edit</span></button>
                       <button onClick={() => deleteInstructor(inst.id)} className="bg-red-50 text-red-500 p-1.5 rounded hover:bg-red-100"><span className="material-symbols-outlined text-[16px]">delete</span></button>
                     </div>
                     <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-slate-50 shadow-md mb-4">
@@ -696,11 +793,6 @@
 
           // --- RENDER BERITA ---
           const renderBerita = () => {
-            const [editorTitle, setEditorTitle] = useState('');
-            const [editorContent, setEditorContent] = useState('');
-            const [editorCategory, setEditorCategory] = useState('Berita Lembaga');
-            const [editingNewsId, setEditingNewsId] = useState(null);
-
             const handlePublish = async () => {
               if (!editorTitle.trim()) { showToast('Judul harus diisi.'); return; }
               const data = {
@@ -708,7 +800,7 @@
                 content: editorContent,
                 category: editorCategory,
                 date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-                img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=500&q=80', // default
+                img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=500&q=80',
               };
               if (editingNewsId) {
                 await updateNews(editingNewsId, data);
@@ -814,12 +906,12 @@
 
           // --- RENDER GALERI ---
           const renderGaleri = () => {
-            const [newGalleryUrl, setNewGalleryUrl] = useState('');
             const handleUpload = () => {
-              if (!newGalleryUrl.trim()) { showToast('Masukkan URL gambar.'); return; }
-              addGallery(newGalleryUrl.trim());
-              setNewGalleryUrl('');
+              if (!galleryUrl.trim()) { showToast('Masukkan URL gambar.'); return; }
+              addGallery(galleryUrl.trim());
+              setGalleryUrl('');
             };
+
             return (
               <div className="space-y-6 animate-fade-in flex flex-col h-full">
                 <div className="flex justify-between items-center">
@@ -828,7 +920,7 @@
                     <p className="text-slate-500 text-sm">Unggah dokumentasi foto kegiatan untuk ditampilkan di website.</p>
                   </div>
                   <div className="flex gap-2">
-                    <input type="text" value={newGalleryUrl} onChange={(e) => setNewGalleryUrl(e.target.value)} placeholder="URL Gambar" className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-64 text-sm" />
+                    <input type="text" value={galleryUrl} onChange={(e) => setGalleryUrl(e.target.value)} placeholder="URL Gambar" className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-64 text-sm" />
                     <button onClick={handleUpload} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
                       <span className="material-symbols-outlined text-[18px]">cloud_upload</span> Upload
                     </button>
@@ -851,7 +943,7 @@
             );
           };
 
-          // --- MODAL GENERIC ---
+          // --- MODAL RENDER (tanpa useState di dalamnya) ---
           const renderModal = () => {
             if (!activeModal) return null;
 
@@ -860,127 +952,105 @@
             let onSave = null;
             let saveLabel = 'Simpan';
 
-            // Fungsi untuk menutup modal
-            const closeModal = () => setActiveModal(null);
+            const closeModal = () => {
+              setActiveModal(null);
+              resetProgramForm();
+              resetScheduleForm();
+              resetInstructorForm();
+              resetSertifikatForm();
+            };
 
-            // --- MODAL PROGRAM (tambah/edit) ---
-            if (activeModal.type === 'program' || activeModal.type === 'edit_program') {
-              const isEdit = activeModal.type === 'edit_program';
-              const data = isEdit ? activeModal.data : {};
-              const [form, setForm] = useState({
-                title: data.title || '',
-                description: data.description || '',
-                icon: data.icon || 'auto_stories',
-                modul_url: data.modul_url || '',
-              });
+            // --- MODAL PROGRAM ---
+            if (activeModal === 'program') {
+              const isEdit = editingProgramId !== null;
               title = isEdit ? 'Edit Program Utama' : 'Tambah Program Utama';
               content = (
                 <div className="space-y-4">
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Program</label><input type="text" value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="2" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Ikon (Material Icons)</label><input type="text" value={form.icon} onChange={(e) => setForm({...form, icon: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Modul (opsional)</label><input type="text" value={form.modul_url} onChange={(e) => setForm({...form, modul_url: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Program</label><input type="text" value={programForm.title} onChange={(e) => setProgramForm({...programForm, title: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="2" value={programForm.description} onChange={(e) => setProgramForm({...programForm, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Ikon (Material Icons)</label><input type="text" value={programForm.icon} onChange={(e) => setProgramForm({...programForm, icon: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Modul (opsional)</label><input type="text" value={programForm.modul_url} onChange={(e) => setProgramForm({...programForm, modul_url: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
                 </div>
               );
               onSave = async () => {
                 if (isEdit) {
-                  await updateProgram(data.id, form);
+                  await updateProgram(editingProgramId, programForm);
                 } else {
-                  await addProgram(form);
+                  await addProgram(programForm);
                 }
                 closeModal();
               };
             }
 
-            // --- MODAL JADWAL ---
-            else if (activeModal.type === 'jadwal' || activeModal.type === 'edit_jadwal') {
-              const isEdit = activeModal.type === 'edit_jadwal';
-              const data = isEdit ? activeModal.data : {};
-              const [form, setForm] = useState({
-                category: data.category || 'Pelatihan',
-                course: data.course || '',
-                date: data.date || '',
-                time: data.time || '',
-                quota: data.quota || '20 Peserta',
-                price: data.price || 'Rp 0',
-                status: data.status || 'Tersedia',
-                img: data.img || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80',
-                description: data.description || '',
-              });
+            // --- MODAL SCHEDULE ---
+            else if (activeModal === 'schedule') {
+              const isEdit = editingScheduleId !== null;
               title = isEdit ? 'Edit Jadwal' : 'Tambah Jadwal';
               content = (
                 <div className="space-y-4">
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Acara</label><input type="text" value={form.course} onChange={(e) => setForm({...form, course: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Acara</label><input type="text" value={scheduleForm.course} onChange={(e) => setScheduleForm({...scheduleForm, course: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label><select value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Pelatihan</option><option>Webinar</option><option>Workshop</option></select></div>
-                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label><input type="text" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label><select value={scheduleForm.category} onChange={(e) => setScheduleForm({...scheduleForm, category: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Pelatihan</option><option>Webinar</option><option>Workshop</option></select></div>
+                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label><input type="text" value={scheduleForm.date} onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Waktu</label><input type="text" value={form.time} onChange={(e) => setForm({...form, time: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Kuota</label><input type="text" value={form.quota} onChange={(e) => setForm({...form, quota: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Waktu</label><input type="text" value={scheduleForm.time} onChange={(e) => setScheduleForm({...scheduleForm, time: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Kuota</label><input type="text" value={scheduleForm.quota} onChange={(e) => setScheduleForm({...scheduleForm, quota: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Harga</label><input type="text" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Status</label><select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Tersedia</option><option>Hampir Penuh</option><option>Penuh</option></select></div>
+                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Harga</label><input type="text" value={scheduleForm.price} onChange={(e) => setScheduleForm({...scheduleForm, price: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Status</label><select value={scheduleForm.status} onChange={(e) => setScheduleForm({...scheduleForm, status: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Tersedia</option><option>Hampir Penuh</option><option>Penuh</option></select></div>
                   </div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Gambar</label><input type="text" value={form.img} onChange={(e) => setForm({...form, img: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="3" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Gambar</label><input type="text" value={scheduleForm.img} onChange={(e) => setScheduleForm({...scheduleForm, img: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="3" value={scheduleForm.description} onChange={(e) => setScheduleForm({...scheduleForm, description: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div>
                 </div>
               );
               onSave = async () => {
                 if (isEdit) {
-                  await updateSchedule(data.id, form);
+                  await updateSchedule(editingScheduleId, scheduleForm);
                 } else {
-                  await addSchedule(form);
+                  await addSchedule(scheduleForm);
                 }
                 closeModal();
               };
             }
 
-            // --- MODAL PENGAJAR ---
-            else if (activeModal.type === 'pengajar' || activeModal.type === 'edit_pengajar') {
-              const isEdit = activeModal.type === 'edit_pengajar';
-              const data = isEdit ? activeModal.data : {};
-              const [form, setForm] = useState({
-                name: data.name || '',
-                role: data.role || '',
-                img: data.img || 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80',
-              });
+            // --- MODAL INSTRUCTOR ---
+            else if (activeModal === 'instructor') {
+              const isEdit = editingInstructorId !== null;
               title = isEdit ? 'Edit Pengajar' : 'Tambah Pengajar';
               content = (
                 <div className="space-y-4">
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Peran / Spesialisasi</label><input type="text" value={form.role} onChange={(e) => setForm({...form, role: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Foto</label><input type="text" value={form.img} onChange={(e) => setForm({...form, img: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={instructorForm.name} onChange={(e) => setInstructorForm({...instructorForm, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">Peran / Spesialisasi</label><input type="text" value={instructorForm.role} onChange={(e) => setInstructorForm({...instructorForm, role: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Foto</label><input type="text" value={instructorForm.img} onChange={(e) => setInstructorForm({...instructorForm, img: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
                 </div>
               );
               onSave = async () => {
                 if (isEdit) {
-                  await updateInstructor(data.id, form);
+                  await updateInstructor(editingInstructorId, instructorForm);
                 } else {
-                  await addInstructor(form);
+                  await addInstructor(instructorForm);
                 }
                 closeModal();
               };
             }
 
-            // --- MODAL UPLOAD SERTIFIKAT ---
-            else if (activeModal.type === 'upload_sertifikat') {
-              const reg = activeModal.data;
-              const [url, setUrl] = useState('');
+            // --- MODAL SERTIFIKAT ---
+            else if (activeModal === 'sertifikat') {
               title = 'Upload E-Sertifikat';
               content = (
                 <div className="space-y-4">
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
                     <p className="text-sm text-slate-500">Peserta</p>
-                    <p className="font-bold text-slate-800">{users.find(u => u.id === reg.user_id)?.name || 'Unknown'}</p>
+                    <p className="font-bold text-slate-800">{users.find(u => u.id === sertifikatRegId)?.name || 'Unknown'}</p>
                   </div>
-                  <div><label className="block text-sm font-semibold text-slate-700 mb-2">URL Sertifikat (PDF/JPG)</label><input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
+                  <div><label className="block text-sm font-semibold text-slate-700 mb-2">URL Sertifikat (PDF/JPG)</label><input type="text" value={sertifikatUrl} onChange={(e) => setSertifikatUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
                 </div>
               );
               onSave = async () => {
-                if (!url.trim()) { showToast('Masukkan URL sertifikat.'); return; }
-                await uploadCertificate(reg.id, url.trim());
+                if (!sertifikatUrl.trim()) { showToast('Masukkan URL sertifikat.'); return; }
+                await uploadCertificate(sertifikatRegId, sertifikatUrl.trim());
                 closeModal();
               };
               saveLabel = 'Upload';
