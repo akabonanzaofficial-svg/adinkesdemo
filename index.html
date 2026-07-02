@@ -75,8 +75,7 @@
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        // --- DATA STATIS LAINNYA (belum diambil dari DB) ---
-        // (Untuk sementara masih hardcode, nanti kita ganti bertahap)
+        // --- DATA STATIS (UNTUK SEMENTARA) ---
         const schedulesData = {
           Pelatihan: [
             { 
@@ -163,6 +162,10 @@
           const [programs, setPrograms] = useState([]);
           const [loading, setLoading] = useState(true);
 
+          // --- STATE PROFIL LEMBAGA ---
+          const [profile, setProfile] = useState(null);
+          const [profileLoading, setProfileLoading] = useState(true);
+
           // --- FETCH PROGRAMS ---
           useEffect(() => {
             async function fetchPrograms() {
@@ -174,7 +177,6 @@
 
               if (error) {
                 console.error('Error fetching programs:', error);
-                // Fallback ke data statis jika error (opsional)
                 setPrograms([]);
               } else {
                 setPrograms(data);
@@ -184,7 +186,26 @@
             fetchPrograms();
           }, []);
 
-          // --- Fungsi navigasi dan lainnya (sama seperti sebelumnya) ---
+          // --- FETCH PROFIL LEMBAGA ---
+          useEffect(() => {
+            async function fetchProfile() {
+              const { data, error } = await supabase
+                .from('institution_profile')
+                .select('*')
+                .eq('id', 1)
+                .single();
+              if (error) {
+                console.error('Error fetching profile:', error);
+                setProfile(null);
+              } else {
+                setProfile(data);
+              }
+              setProfileLoading(false);
+            }
+            fetchProfile();
+          }, []);
+
+          // --- FUNGSI NAVIGASI ---
           const navigateToSchedule = (category) => {
             setScheduleCategory(category);
             setActiveTab('Jadwal');
@@ -271,7 +292,7 @@
             { id: 'program', label: 'Silabus', icon: 'auto_stories', color: 'text-blue-500', action: () => setActiveTab('Program') }
           ];
 
-          // --- Fungsi untuk mendapatkan warna dan bg berdasarkan ikon (untuk program) ---
+          // --- Fungsi untuk mendapatkan warna dan bg berdasarkan ikon ---
           const getIconStyle = (icon) => {
             const mapping = {
               'ecg_heart': { color: 'text-red-500', bg: 'bg-red-50' },
@@ -282,13 +303,12 @@
             return mapping[icon] || { color: 'text-slate-500', bg: 'bg-slate-50' };
           };
 
-          // --- RENDER KONTEN (hanya bagian Program yang diubah) ---
+          // --- RENDER KONTEN ---
           const renderContent = () => {
             switch (activeTab) {
               case 'Beranda':
                 return (
                   <div className="animate-fade-in pb-12 w-full max-w-none px-0">
-                    {/* Hero section dan Berita sama seperti sebelumnya */}
                     <section className="bg-alo-blue pt-12 pb-0 px-6 relative overflow-hidden">
                       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end">
                         <div className="w-full md:w-3/5 pb-20 pt-10 z-10 text-center md:text-left">
@@ -370,6 +390,17 @@
                 );
 
               case 'Profil':
+                if (profileLoading) {
+                  return (
+                    <div className="animate-fade-in max-w-5xl mx-auto px-6 py-12 text-center">
+                      <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                      <p className="text-slate-500 mt-4">Memuat profil lembaga...</p>
+                    </div>
+                  );
+                }
+                if (!profile) {
+                  return <div className="p-12 text-center text-slate-500">Profil belum tersedia.</div>;
+                }
                 return (
                   <div className="animate-fade-in max-w-5xl mx-auto space-y-16 px-6 py-12">
                     <div className="text-center">
@@ -379,31 +410,51 @@
                     
                     <div className="flex flex-col md:flex-row gap-12 items-center">
                       <div className="w-full md:w-1/2">
-                        <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80" alt="Gedung Lembaga" className="rounded-3xl shadow-xl w-full object-cover h-[400px]" />
+                        <img src={profile.banner_url || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80'} alt="Gedung Lembaga" className="rounded-3xl shadow-xl w-full object-cover h-[400px]" />
                       </div>
                       <div className="w-full md:w-1/2 space-y-6 text-slate-600 leading-relaxed">
-                        <h3 className="text-2xl font-bold text-blue-900">Medika Edukasi Nusantara</h3>
-                        <p>Didirikan sejak tahun 2015, Medika Edukasi Nusantara adalah lembaga pelatihan independen yang berdedikasi penuh untuk memajukan kualitas Sumber Daya Manusia (SDM) di sektor kesehatan Indonesia.</p>
+                        <h3 className="text-2xl font-bold text-blue-900">{profile.name || 'Medika Edukasi Nusantara'}</h3>
+                        <p>{profile.tagline || 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia'}</p>
                         <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-alo-blue">
                           <h4 className="font-bold text-blue-900 mb-2 text-lg">Visi Kami</h4>
-                          <p>Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara yang menghasilkan tenaga kesehatan profesional, kompeten, dan beretika.</p>
+                          <p>{profile.visi || 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.'}</p>
+                        </div>
+                        <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-teal-500">
+                          <h4 className="font-bold text-blue-900 mb-2 text-lg">Misi</h4>
+                          <p className="whitespace-pre-line">{profile.misi || '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-12 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">location_on</span> Alamat</h4>
+                        <p className="text-slate-600">{profile.alamat || 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345'}</p>
+                      </div>
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">contact_mail</span> Kontak</h4>
+                        <div className="space-y-2 text-sm text-slate-600">
+                          <p><span className="font-semibold">Telepon:</span> {profile.telepon || '-'}</p>
+                          <p><span className="font-semibold">WhatsApp:</span> {profile.whatsapp || '-'}</p>
+                          <p><span className="font-semibold">Email:</span> {profile.email || '-'}</p>
+                          <p><span className="font-semibold">Instagram:</span> <a href={profile.instagram || '#'} target="_blank" className="text-alo-blue hover:underline">{profile.instagram || '-'}</a></p>
                         </div>
                       </div>
                     </div>
 
                     <div className="pt-12 border-t border-slate-200">
-                       <div className="text-center mb-10 max-w-2xl mx-auto">
+                      <div className="text-center mb-10 max-w-2xl mx-auto">
                         <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
                         <p className="text-slate-500 leading-relaxed">Keberhasilan lembaga kami didukung oleh jajaran pimpinan dan manajemen yang kompeten, berdedikasi tinggi, serta memiliki pengalaman puluhan tahun.</p>
                       </div>
                       
                       <div className="flex flex-col items-center space-y-8">
                         <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative">
-                           <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
-                             <span className="material-symbols-outlined text-[24px]">group</span>
-                           </div>
-                           <h4 className="text-lg font-bold text-slate-800 mt-4">{orgStructure[0].name}</h4>
-                           <p className="text-alo-blue font-semibold text-sm">{orgStructure[0].role}</p>
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
+                            <span className="material-symbols-outlined text-[24px]">group</span>
+                          </div>
+                          <h4 className="text-lg font-bold text-slate-800 mt-4">{orgStructure[0]?.name || 'Dr. Hendra Wijaya, MARS'}</h4>
+                          <p className="text-alo-blue font-semibold text-sm">{orgStructure[0]?.role || 'Direktur Utama'}</p>
                         </div>
                         
                         <div className="w-px h-8 bg-slate-300"></div>
@@ -636,7 +687,7 @@
             }
           };
 
-          // --- RENDER UTAMA (sama seperti sebelumnya) ---
+          // --- RENDER UTAMA ---
           return (
             <div className="min-h-screen flex flex-col relative bg-slate-50">
               
@@ -709,7 +760,7 @@
                 {renderContent()}
               </main>
 
-              {/* Footer, WhatsApp float, Modal Booking, Modal Share (sama seperti sebelumnya) */}
+              {/* Footer */}
               <footer className="bg-[#0f172a] text-slate-300 py-16 mt-auto border-t-[8px] border-alo-blue">
                 <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
                   <div className="col-span-1 md:col-span-1">
@@ -736,21 +787,21 @@
                       <div className="space-y-4">
                         <li className="flex items-start gap-3">
                           <span className="material-symbols-outlined text-[20px] text-alo-blue shrink-0">location_on</span> 
-                          <span>Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345</span>
+                          <span>{profile?.alamat || 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345'}</span>
                         </li>
                         <li className="flex items-center gap-3">
                           <span className="material-symbols-outlined text-[20px] text-alo-blue shrink-0">mail</span> 
-                          <span>halo@medikaedu.co.id</span>
+                          <span>{profile?.email || 'halo@medikaedu.co.id'}</span>
                         </li>
                       </div>
                       <div className="space-y-4">
                         <li className="flex items-center gap-3">
                           <span className="material-symbols-outlined text-[20px] text-alo-blue shrink-0">call</span> 
-                          <span>021 - 888 9999 (Hunting)</span>
+                          <span>{profile?.telepon || '021 - 888 9999'}</span>
                         </li>
                         <li className="flex items-center gap-3">
                           <span className="material-symbols-outlined text-[20px] text-[#25D366] shrink-0">chat</span> 
-                          <span>+62 812 3456 7890 (WA)</span>
+                          <span>{profile?.whatsapp || '+62 812 3456 7890'}</span>
                         </li>
                       </div>
                     </div>
@@ -781,6 +832,7 @@
                 </div>
               </footer>
 
+              {/* WhatsApp Float */}
               <a 
                 href="https://wa.me/6281234567890" 
                 target="_blank" 
