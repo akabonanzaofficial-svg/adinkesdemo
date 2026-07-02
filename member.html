@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Peserta - Medika Edukasi Nusantara</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'alo-blue': '#1E73BE',
+              'member-bg': '#f8fafc',
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Google Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .icon-filled {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+      
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #f1f5f9; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel untuk JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-member-bg font-sans text-slate-800 antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- INISIALISASI SUPABASE ---
+        const supabaseUrl = 'https://ciigcaudmesmtgznyoga.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        // --- KOMPONEN UTAMA ---
+        function App() {
+            // State autentikasi
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [isRegistering, setIsRegistering] = useState(false);
+            const [activeMenu, setActiveMenu] = useState('Overview');
+            const [toastMessage, setToastMessage] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            // State user
+            const [user, setUser] = useState(null); // akan diisi dengan data dari Supabase setelah login
+
+            // Data dari Supabase untuk dashboard
+            const [registrations, setRegistrations] = useState([]);
+            const [schedules, setSchedules] = useState([]);
+
+            // Form states
+            const [loginPhone, setLoginPhone] = useState('');
+            const [loginPassword, setLoginPassword] = useState('');
+            const [registerData, setRegisterData] = useState({
+                name: '',
+                instansi: '',
+                phone: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+            });
+
+            // Toast helper
+            const showToast = (message) => {
+                setToastMessage(message);
+                setTimeout(() => setToastMessage(''), 3000);
+            };
+
+            // --- FUNGSI AUTENTIKASI ---
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    // Cari user berdasarkan phone atau email
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .or(`phone.eq.${loginPhone},email.eq.${loginPhone}`)
+                        .single();
+
+                    if (error || !data) {
+                        showToast('Akun tidak ditemukan.');
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Verifikasi password (plain text sementara)
+                    if (data.password_hash !== loginPassword) {
+                        showToast('Password salah.');
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Login sukses
+                    setUser(data);
+                    setIsLoggedIn(true);
+                    showToast(`Selamat datang, ${data.name}!`);
+                    // Reset form
+                    setLoginPhone('');
+                    setLoginPassword('');
+                } catch (err) {
+                    showToast('Terjadi kesalahan: ' + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleRegister = async (e) => {
+                e.preventDefault();
+                const { name, instansi, phone, email, password, confirmPassword } = registerData;
+
+                if (password !== confirmPassword) {
+                    showToast('Password dan konfirmasi tidak cocok.');
+                    return;
+                }
+
+                setLoading(true);
+                try {
+                    // Cek apakah phone atau email sudah terdaftar
+                    const { data: existing } = await supabase
+                        .from('users')
+                        .select('id')
+                        .or(`phone.eq.${phone},email.eq.${email}`);
+
+                    if (existing && existing.length > 0) {
+                        showToast('Nomor WhatsApp atau email sudah terdaftar.');
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Insert user baru
+                    const { data, error } = await supabase
+                        .from('users')
+                        .insert([{
+                            name,
+                            instansi,
+                            phone,
+                            email,
+                            password_hash: password, // plain text
+                            role: 'member',
+                            member_since: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+                        }])
+                        .select()
+                        .single();
+
+                    if (error) {
+                        showToast('Gagal mendaftar: ' + error.message);
+                        setLoading(false);
+                        return;
+                    }
+
+                    showToast('Akun berhasil dibuat! Silakan masuk.');
+                    setIsRegistering(false);
+                    setRegisterData({ name: '', instansi: '', phone: '', email: '', password: '', confirmPassword: '' });
+                } catch (err) {
+                    showToast('Terjadi kesalahan: ' + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleLogout = () => {
+                setIsLoggedIn(false);
+                setUser(null);
+                setRegistrations([]);
+                setSchedules([]);
+                setActiveMenu('Overview');
+                showToast('Anda telah keluar.');
+            };
+
+            // --- FETCH DATA MEMBER ---
+            useEffect(() => {
+                if (isLoggedIn && user) {
+                    async function fetchMemberData() {
+                        try {
+                            // Ambil registrasi user
+                            const { data: regs, error: regError } = await supabase
+                                .from('registrations')
+                                .select('*, schedules(*)')
+                                .eq('user_id', user.id)
+                                .order('id', { ascending: false });
+
+                            if (regError) throw regError;
+                            setRegistrations(regs || []);
+
+                            // Ambil semua schedules untuk keperluan tambahan
+                            const { data: scheds, error: schedError } = await supabase
+                                .from('schedules')
+                                .select('*')
+                                .order('id', { ascending: true });
+
+                            if (schedError) throw schedError;
+                            setSchedules(scheds || []);
+                        } catch (err) {
+                            console.error('Error fetching member data:', err);
+                            showToast('Gagal memuat data.');
+                        }
+                    }
+                    fetchMemberData();
+                }
+            }, [isLoggedIn, user]);
+
+            // --- FUNGSI UPDATE PROFIL ---
+            const updateProfile = async (updatedData) => {
+                try {
+                    const { error } = await supabase
+                        .from('users')
+                        .update(updatedData)
+                        .eq('id', user.id);
+
+                    if (error) throw error;
+
+                    // Update local state
+                    setUser({ ...user, ...updatedData });
+                    showToast('Profil berhasil diperbarui!');
+                } catch (err) {
+                    showToast('Gagal update profil: ' + err.message);
+                }
+            };
+
+            // --- RENDER LOGIN / REGISTER ---
+            if (!isLoggedIn) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 relative overflow-hidden py-10">
+                        {toastMessage && (
+                            <div className="absolute top-6 right-1/2 transform translate-x-1/2 z-[100] animate-fade-in">
+                                <div className="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 text-sm font-medium">
+                                    <span className="material-symbols-outlined text-[18px]">sync</span> {toastMessage}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 z-10 animate-fade-in flex flex-col overflow-hidden max-h-[90vh]">
+                            {isRegistering ? (
+                                <div className="flex flex-col h-full overflow-hidden">
+                                    <div className="bg-alo-blue p-6 text-center shrink-0">
+                                        <h1 className="text-2xl font-bold text-white tracking-tight">Buat Akun Baru</h1>
+                                        <p className="text-blue-100 text-sm mt-1">Daftar untuk mengelola riwayat pelatihan Anda</p>
+                                    </div>
+                                    <div className="p-6 md:p-8 flex-1 overflow-y-auto">
+                                        <form onSubmit={handleRegister} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap (beserta gelar)</label>
+                                                <input required type="text" value={registerData.name} onChange={(e) => setRegisterData({...registerData, name: e.target.value})} placeholder="Misal: Dr. Budi Santoso" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm bg-slate-50 focus:bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nomor WhatsApp Aktif</label>
+                                                <input required type="tel" value={registerData.phone} onChange={(e) => setRegisterData({...registerData, phone: e.target.value})} placeholder="Misal: 081234567890" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm bg-slate-50 focus:bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Pribadi</label>
+                                                <input required type="email" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} placeholder="budi@email.com" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm bg-slate-50 focus:bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Instansi / Rumah Sakit Asal</label>
+                                                <input required type="text" value={registerData.instansi} onChange={(e) => setRegisterData({...registerData, instansi: e.target.value})} placeholder="Misal: RSUP Dr. Cipto Mangunkusumo" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm bg-slate-50 focus:bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi</label>
+                                                <input required type="password" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} placeholder="••••••••" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm bg-slate-50 focus:bg-white" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Konfirmasi Kata Sandi</label>
+                                                <input required type="password" value={registerData.confirmPassword} onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})} placeholder="••••••••" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm bg-slate-50 focus:bg-white" />
+                                            </div>
+                                            <button type="submit" disabled={loading} className="w-full bg-alo-blue text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md mt-6 disabled:opacity-50">
+                                                {loading ? 'Memproses...' : 'Daftar Sekarang'}
+                                            </button>
+                                        </form>
+                                        <div className="mt-8 text-center text-sm text-slate-500 pb-2">
+                                            Sudah punya akun? <a href="#" onClick={(e) => { e.preventDefault(); setIsRegistering(false); }} className="text-alo-blue font-bold hover:underline">Masuk di sini</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col h-full overflow-hidden">
+                                    <div className="bg-alo-blue p-8 text-center shrink-0">
+                                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-alo-blue shadow-lg mx-auto mb-4">
+                                            <span className="material-symbols-outlined text-[32px] icon-filled">ecg_heart</span>
+                                        </div>
+                                        <h1 className="text-2xl font-bold text-white tracking-tight">Portal Peserta</h1>
+                                        <p className="text-blue-100 text-sm mt-1">Masuk untuk mengelola pelatihan Anda</p>
+                                    </div>
+                                    <div className="p-8 flex-1 overflow-y-auto">
+                                        <form onSubmit={handleLogin} className="space-y-5">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">No. WhatsApp atau Email</label>
+                                                <div className="relative">
+                                                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span>
+                                                    <input required type="text" value={loginPhone} onChange={(e) => setLoginPhone(e.target.value)} placeholder="Misal: 081234567890" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi (Password)</label>
+                                                <div className="relative">
+                                                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span>
+                                                    <input required type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
+                                                </div>
+                                                <div className="text-right mt-1">
+                                                    <a href="#" className="text-xs font-semibold text-alo-blue hover:underline">Lupa kata sandi?</a>
+                                                </div>
+                                            </div>
+                                            <button type="submit" disabled={loading} className="w-full bg-alo-blue text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md mt-4 disabled:opacity-50">
+                                                {loading ? 'Memproses...' : 'Masuk ke Dashboard'}
+                                            </button>
+                                        </form>
+                                        <div className="mt-8 text-center text-sm text-slate-500">
+                                            Belum punya akun? <a href="#" onClick={(e) => { e.preventDefault(); setIsRegistering(true); }} className="text-alo-blue font-bold hover:underline">Daftar sekarang</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="fixed top-[-20%] left-[-10%] w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 z-0 pointer-events-none"></div>
+                        <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-teal-50 rounded-full blur-3xl opacity-50 z-0 pointer-events-none"></div>
+                    </div>
+                );
+            }
+
+            // --- DASHBOARD MEMBER (LOGIN) ---
+            const menus = [
+                { id: 'Overview', icon: 'dashboard', label: 'Ringkasan' },
+                { id: 'Riwayat', icon: 'history', label: 'Riwayat Pelatihan' },
+                { id: 'Sertifikat', icon: 'workspace_premium', label: 'E-Sertifikat' },
+                { id: 'Profil', icon: 'person', label: 'Profil Saya' }
+            ];
+
+            // --- RENDER OVERVIEW ---
+            const renderOverview = () => {
+                const totalRegistrations = registrations.length;
+                const completed = registrations.filter(r => r.status_pembayaran === 'Selesai' || r.status_pembayaran === 'Lunas').length;
+                const certificates = registrations.filter(r => r.sertifikat_url).length;
+                const pendingPayment = registrations.filter(r => r.status_pembayaran === 'Menunggu Pembayaran' || r.status_pembayaran === 'Menunggu Cek').length;
+
+                // Ambil jadwal terdekat
+                const upcoming = registrations
+                    .filter(r => r.status_pembayaran === 'Lunas' || r.status_pembayaran === 'Menunggu Pembayaran')
+                    .sort((a, b) => new Date(a.schedules?.date) - new Date(b.schedules?.date))[0];
+
+                return (
+                    <div className="space-y-8 animate-fade-in">
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
+                            <div className="w-20 h-20 bg-blue-100 text-alo-blue rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-white shadow-md">
+                                <span className="material-symbols-outlined text-[40px] icon-filled">waving_hand</span>
+                            </div>
+                            <div className="z-10 text-center md:text-left">
+                                <h2 className="text-2xl md:text-3xl font-bold text-slate-800">Selamat datang kembali, {user.name}!</h2>
+                                <p className="text-slate-500 mt-1">Siap untuk meningkatkan kompetensi medis Anda hari ini?</p>
+                            </div>
+                            <div className="absolute right-0 top-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-[100px] z-0 opacity-50"></div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 group hover:border-alo-blue transition-colors">
+                                <div className="w-14 h-14 bg-blue-50 text-alo-blue rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <span className="material-symbols-outlined text-[28px]">local_library</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-slate-500 font-medium">Pelatihan Diikuti</p>
+                                    <h3 className="text-2xl font-black text-slate-800">{totalRegistrations} <span className="text-sm font-medium text-slate-400">program</span></h3>
+                                </div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 group hover:border-green-500 transition-colors">
+                                <div className="w-14 h-14 bg-green-50 text-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <span className="material-symbols-outlined text-[28px]">workspace_premium</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-slate-500 font-medium">Sertifikat Tersedia</p>
+                                    <h3 className="text-2xl font-black text-slate-800">{certificates} <span className="text-sm font-medium text-slate-400">dokumen</span></h3>
+                                </div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 group hover:border-orange-500 transition-colors">
+                                <div className="w-14 h-14 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <span className="material-symbols-outlined text-[28px]">pending_actions</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-slate-500 font-medium">Menunggu Pembayaran</p>
+                                    <h3 className="text-2xl font-black text-slate-800">{pendingPayment} <span className="text-sm font-medium text-slate-400">tagihan</span></h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        {upcoming && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-alo-blue">event_upcoming</span> Agenda Terdekat Anda
+                                    </h3>
+                                    <button onClick={() => setActiveMenu('Riwayat')} className="text-sm font-semibold text-alo-blue hover:underline">Lihat Semua</button>
+                                </div>
+                                <div className="p-6 flex flex-col md:flex-row gap-6 items-center">
+                                    <div className="w-20 h-20 bg-blue-100 text-alo-blue rounded-2xl flex flex-col items-center justify-center border border-blue-200 shrink-0 shadow-sm">
+                                        <span className="text-sm font-bold uppercase">{upcoming.schedules?.date?.split(' ')[0] || 'Agu'}</span>
+                                        <span className="text-2xl font-black leading-none">{upcoming.schedules?.date?.split(' ').slice(1).join(' ') || '22'}</span>
+                                    </div>
+                                    <div className="flex-1 text-center md:text-left">
+                                        <div className="inline-block px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded mb-2">
+                                            {upcoming.status_pembayaran === 'Lunas' ? 'Lunas & Terkonfirmasi' : 'Menunggu Pembayaran'}
+                                        </div>
+                                        <h4 className="text-xl font-bold text-slate-800 mb-1">{upcoming.schedules?.course || 'Pelatihan'}</h4>
+                                        <div className="flex flex-wrap gap-4 text-sm text-slate-500 justify-center md:justify-start">
+                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">schedule</span> {upcoming.schedules?.time || '08:00 - 15:00 WIB'}</span>
+                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">location_on</span> Gd. Kesehatan Lt.3 (Luring)</span>
+                                        </div>
+                                    </div>
+                                    <div className="shrink-0 w-full md:w-auto">
+                                        <button onClick={() => showToast('Mendownload ID Card / Tiket...')} className="w-full md:w-auto bg-slate-800 hover:bg-slate-900 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+                                            <span className="material-symbols-outlined text-[18px]">local_activity</span> Download Tiket
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // --- RENDER RIWAYAT ---
+            const renderRiwayat = () => {
+                // Gabungkan registrasi dengan data schedule
+                const riwayat = registrations.map(reg => ({
+                    ...reg,
+                    course: reg.schedules?.course || 'Program tidak diketahui',
+                    date: reg.schedules?.date || '-',
+                    price: reg.schedules?.price || '-',
+                    type: reg.schedules?.category || 'Pelatihan',
+                    status: reg.status_pembayaran || 'Menunggu',
+                    scheduleId: reg.schedule_id
+                }));
+
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-slate-800">Riwayat Pelatihan</h2>
+                        </div>
+
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
+                                            <th className="p-5 font-semibold">Nama Program</th>
+                                            <th className="p-5 font-semibold">Tanggal Pelaksanaan</th>
+                                            <th className="p-5 font-semibold">Biaya</th>
+                                            <th className="p-5 font-semibold text-center">Status</th>
+                                            <th className="p-5 font-semibold text-center">Aksi / Modul</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 text-sm">
+                                        {riwayat.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="p-5">
+                                                    <p className="font-bold text-slate-800 text-base">{item.course}</p>
+                                                    <p className="text-xs text-alo-blue font-semibold mt-0.5">{item.type}</p>
+                                                </td>
+                                                <td className="p-5 text-slate-600 font-medium">{item.date}</td>
+                                                <td className="p-5 font-bold text-slate-700">{item.price}</td>
+                                                <td className="p-5 text-center">
+                                                    {item.status === 'Selesai' && <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-200 text-slate-700 border border-slate-300">Selesai</span>}
+                                                    {item.status === 'Lunas' && <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 border border-green-200">Lunas / Aktif</span>}
+                                                    {item.status === 'Menunggu Pembayaran' && <span className="px-3 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700 border border-orange-200">Menunggu Pembayaran</span>}
+                                                    {item.status === 'Menunggu Cek' && <span className="px-3 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Menunggu Verifikasi</span>}
+                                                </td>
+                                                <td className="p-5 text-center">
+                                                    {item.status === 'Menunggu Pembayaran' || item.status === 'Menunggu Cek' ? (
+                                                        <button onClick={() => showToast('Membuka halaman pembayaran...')} className="px-4 py-2 bg-alo-blue text-white rounded-lg font-bold text-xs hover:bg-blue-700 shadow-sm transition-colors w-full">
+                                                            Bayar Sekarang
+                                                        </button>
+                                                    ) : (
+                                                        <button onClick={() => showToast('Mendownload materi pelatihan...')} className="flex items-center justify-center gap-1 text-alo-blue hover:text-blue-800 font-semibold text-sm w-full mx-auto">
+                                                            <span className="material-symbols-outlined text-[18px]">download</span> Modul
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {riwayat.length === 0 && (
+                                            <tr><td colSpan="5" className="p-8 text-center text-slate-400">Belum ada riwayat pelatihan.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- RENDER SERTIFIKAT ---
+            const renderSertifikat = () => {
+                const certificates = registrations.filter(r => r.sertifikat_url);
+
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800">E-Sertifikat Saya</h2>
+                                <p className="text-slate-500 text-sm">Unduh sertifikat pelatihan yang telah Anda selesaikan.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {certificates.map((cert) => (
+                                <div key={cert.id} className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group hover:shadow-lg transition-all">
+                                    <div className="h-48 overflow-hidden relative border-b border-slate-100">
+                                        <img src={cert.sertifikat_url} alt="Certificate Thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" onError={(e) => e.target.src = 'https://via.placeholder.com/400x300?text=Sertifikat'} />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end p-4">
+                                            <span className="text-white font-mono text-xs tracking-wider opacity-80">Sertifikat #{cert.id}</span>
+                                        </div>
+                                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-1.5 shadow-sm text-green-600">
+                                            <span className="material-symbols-outlined text-[20px] icon-filled">verified</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5 flex flex-col flex-1">
+                                        <h3 className="font-bold text-slate-800 text-base mb-1 leading-snug">{cert.schedules?.course || 'Pelatihan'}</h3>
+                                        <p className="text-xs text-slate-500 mb-5 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">event_available</span> Lulus pada: {cert.schedules?.date || '-'}</p>
+                                        
+                                        <button onClick={() => window.open(cert.sertifikat_url, '_blank')} className="mt-auto w-full bg-slate-50 hover:bg-alo-blue text-alo-blue hover:text-white border border-slate-200 hover:border-alo-blue py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                                            <span className="material-symbols-outlined text-[18px]">download</span> Lihat & Unduh
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {certificates.length === 0 && (
+                                <div className="col-span-full bg-slate-50 rounded-3xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
+                                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                                        <span className="material-symbols-outlined text-[32px]">school</span>
+                                    </div>
+                                    <p className="text-sm font-semibold text-slate-600">Ikuti pelatihan lainnya</p>
+                                    <p className="text-xs text-slate-400 mt-1">Sertifikat baru akan otomatis muncul di sini setelah Anda lulus.</p>
+                                    <a href="index.html" target="_blank" className="mt-4 text-alo-blue font-bold text-sm hover:underline">Lihat Jadwal Terbuka</a>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- RENDER PROFIL ---
+            const renderProfil = () => {
+                const [editName, setEditName] = useState(user.name);
+                const [editInstansi, setEditInstansi] = useState(user.instansi || '');
+                const [editPhone, setEditPhone] = useState(user.phone);
+                const [editEmail, setEditEmail] = useState(user.email || '');
+                const [newPassword, setNewPassword] = useState('');
+                const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+                const handleSaveProfile = async (e) => {
+                    e.preventDefault();
+                    const updates = {
+                        name: editName,
+                        instansi: editInstansi,
+                        phone: editPhone,
+                        email: editEmail,
+                    };
+
+                    if (newPassword) {
+                        if (newPassword !== confirmNewPassword) {
+                            showToast('Password baru dan konfirmasi tidak cocok.');
+                            return;
+                        }
+                        updates.password_hash = newPassword;
+                    }
+
+                    await updateProfile(updates);
+                    // Reset password fields
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                };
+
+                return (
+                    <div className="space-y-6 animate-fade-in max-w-3xl">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-6">Pengaturan Profil</h2>
+                        
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row items-center md:items-start gap-6 bg-slate-50/50">
+                                <div className="relative group cursor-pointer">
+                                    <div className="w-24 h-24 bg-alo-blue text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md border-4 border-white">
+                                        {user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                    </div>
+                                    <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity border-4 border-transparent">
+                                        <span className="material-symbols-outlined text-white">photo_camera</span>
+                                    </div>
+                                </div>
+                                <div className="text-center md:text-left flex-1">
+                                    <h3 className="text-2xl font-bold text-slate-800">{user.name}</h3>
+                                    <p className="text-alo-blue font-semibold text-sm mb-2">{user.instansi || 'Instansi belum diisi'}</p>
+                                    <p className="text-xs text-slate-500 bg-slate-200 inline-block px-3 py-1 rounded-full">Anggota sejak {user.member_since || 'Belum diketahui'}</p>
+                                </div>
+                            </div>
+
+                            <form className="p-8 space-y-6" onSubmit={handleSaveProfile}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap (Sesuai Ijazah/Sertifikat)</label>
+                                        <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Instansi / Rumah Sakit Asal</label>
+                                        <input type="text" value={editInstansi} onChange={(e) => setEditInstansi(e.target.value)} className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nomor WhatsApp Aktif</label>
+                                        <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Aktif</label>
+                                        <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none" />
+                                    </div>
+                                </div>
+                                
+                                <hr className="border-slate-100" />
+                                
+                                <div>
+                                    <h4 className="font-bold text-slate-800 text-sm mb-4">Ganti Kata Sandi (Opsional)</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Kata Sandi Baru" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none" />
+                                        </div>
+                                        <div>
+                                            <input type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} placeholder="Konfirmasi Kata Sandi Baru" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-4">
+                                    <button type="submit" className="bg-alo-blue text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-md flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">save</span> Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- RENDER DASHBOARD UTAMA ---
+            return (
+                <div className="flex h-screen w-full bg-member-bg overflow-hidden relative">
+                    {/* Toast */}
+                    {toastMessage && (
+                        <div className="absolute top-6 right-8 z-[100] animate-fade-in">
+                            <div className="bg-slate-800 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
+                                <span className="material-symbols-outlined text-green-400">check_circle</span>
+                                <span className="text-sm font-medium">{toastMessage}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Sidebar Desktop */}
+                    <aside className="w-64 bg-white border-r border-slate-200 flex-col hidden md:flex flex-shrink-0 z-20">
+                        <div className="h-20 flex items-center px-6 border-b border-slate-100 shrink-0">
+                            <div className="w-8 h-8 bg-alo-blue rounded-lg flex items-center justify-center text-white mr-3 shadow-md">
+                                <span className="material-symbols-outlined text-[20px]">ecg_heart</span>
+                            </div>
+                            <span className="font-bold text-slate-800 text-lg tracking-tight">Medika<span className="text-alo-blue">Edu</span></span>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+                            <p className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Menu Member</p>
+                            {menus.map(menu => (
+                                <button 
+                                    key={menu.id} 
+                                    onClick={() => setActiveMenu(menu.id)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold ${
+                                        activeMenu === menu.id 
+                                        ? 'bg-blue-50 text-alo-blue' 
+                                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">{menu.icon}</span>
+                                    {menu.label}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        <div className="p-4 border-t border-slate-100">
+                            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-colors text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-red-500">
+                                <span className="material-symbols-outlined text-[18px]">logout</span> Keluar
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+                        {/* Mobile Header */}
+                        <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-20">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-alo-blue rounded-lg flex items-center justify-center text-white shadow-sm">
+                                    <span className="material-symbols-outlined text-[18px]">ecg_heart</span>
+                                </div>
+                                <span className="font-bold text-slate-800">Portal Peserta</span>
+                            </div>
+                            <button className="text-slate-600 p-2" onClick={() => {/* Menu Toggler */}}>
+                                <span className="material-symbols-outlined">menu</span>
+                            </button>
+                        </header>
+
+                        {/* Top Navbar Desktop */}
+                        <header className="h-20 bg-white/50 backdrop-blur-md border-b border-slate-200 hidden md:flex items-center justify-end px-8 z-10 sticky top-0 shrink-0">
+                            <div className="flex items-center gap-4">
+                                <a href="index.html" target="_blank" className="text-sm font-bold text-slate-500 hover:text-alo-blue flex items-center gap-1 transition-colors">
+                                    <span className="material-symbols-outlined text-[18px]">language</span> Kembali ke Website Utama
+                                </a>
+                                <div className="h-6 w-px bg-slate-300 mx-2"></div>
+                                <button className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-alo-blue transition-colors">
+                                    <span className="material-symbols-outlined text-[20px]">notifications</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* Dynamic Content */}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-0">
+                            {activeMenu === 'Overview' && renderOverview()}
+                            {activeMenu === 'Riwayat' && renderRiwayat()}
+                            {activeMenu === 'Sertifikat' && renderSertifikat()}
+                            {activeMenu === 'Profil' && renderProfil()}
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
