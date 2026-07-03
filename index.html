@@ -24,45 +24,7 @@ const { useState, useEffect } = React;
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // --- DATA STATIS (UNTUK SEMENTARA) ---
-        const schedulesData = {
-          Pelatihan: [
-            { 
-              id: 1, course: 'Bantuan Hidup Dasar (BHD)', date: '15-16 Agustus 2026', time: '08:00 - 16:00', quota: '20 Peserta', price: 'Rp 1.500.000', status: 'Tersedia',
-              img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80',
-              description: 'Pelatihan komprehensif mengenai teknik resusitasi jantung paru (RJP) terkini, penanganan tersedak, dan penggunaan Automated External Defibrillator (AED) bagi tenaga medis profesional.'
-            },
-            { 
-              id: 2, course: 'K3 Rumah Sakit', date: '22-24 Agustus 2026', time: '08:00 - 15:00', quota: '15 Peserta', price: 'Rp 2.500.000', status: 'Hampir Penuh',
-              img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&h=400&q=80',
-              description: 'Membahas secara detail manajemen Keselamatan dan Kesehatan Kerja (K3) khusus di lingkungan Rumah Sakit, termasuk identifikasi bahaya, manajemen risiko, dan tanggap darurat fasilitas.'
-            },
-          ],
-          Webinar: [
-            { 
-              id: 3, course: 'Webinar: Update Pedoman PPI 2026', date: '10 Agustus 2026', time: '09:00 - 11:30', quota: '500 Peserta', price: 'Gratis', status: 'Tersedia',
-              img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&h=400&q=80',
-              description: 'Webinar interaktif yang mengupas tuntas pedoman terbaru Pencegahan dan Pengendalian Infeksi (PPI) standar Kemenkes RI tahun 2026. Diwajibkan bagi seluruh komite PPI RS.'
-            },
-            { 
-              id: 4, course: 'Webinar: Etika Keperawatan Digital', date: '18 Agustus 2026', time: '13:00 - 15:00', quota: '300 Peserta', price: 'Rp 50.000', status: 'Tersedia',
-              img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&h=400&q=80',
-              description: 'Tantangan dan batasan etika bagi perawat dalam memberikan layanan telemedicine dan berkonsultasi secara digital di era modern. Tersertifikasi PPNI 2 SKP.'
-            },
-          ],
-          Workshop: [
-            { 
-              id: 5, course: 'Workshop Interpretasi EKG Dasar', date: '5 September 2026', time: '08:00 - 16:00', quota: '30 Peserta', price: 'Rp 750.000', status: 'Tersedia',
-              img: 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=800&h=400&q=80',
-              description: 'Pelatihan hands-on untuk membaca dan menginterpretasikan hasil Elektrokardiogram (EKG) dasar secara cepat dan akurat, dipandu langsung oleh Spesialis Jantung.'
-            },
-            { 
-              id: 6, course: 'Workshop Tatalaksana Luka Modern', date: '12 September 2026', time: '08:00 - 15:00', quota: '25 Peserta', price: 'Rp 850.000', status: 'Tersedia',
-              img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800&h=400&q=80',
-              description: 'Teknik perawatan luka terkini menggunakan balutan modern (modern dressing) berbasis evidence-based nursing. Peserta akan mendapatkan simulasi praktik langsung.'
-            },
-          ]
-        };
-
+        
         const newsList = [
           { id: 1, title: 'Pentingnya Sertifikasi BHD bagi Seluruh Karyawan Rumah Sakit di Era Modern', date: '10 Juni 2026', category: 'Artikel', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=500&q=80' },
           { id: 2, title: 'MedikaEdu Sukses Gelar Pelatihan Manajemen Bangsal Angkatan ke-15', date: '05 Juni 2026', category: 'Berita', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=500&q=80' },
@@ -104,7 +66,9 @@ const { useState, useEffect } = React;
           const [programs, setPrograms] = useState([]);
           const [loading, setLoading] = useState(true);
           const [instructors, setInstructors] = useState([]);
-          const [instructorsLoading, setInstructorsLoading] = useState(true);      
+          const [instructorsLoading, setInstructorsLoading] = useState(true);
+          const [schedules, setSchedules] = useState([]);
+          const [schedulesLoading, setSchedulesLoading] = useState(true);
 
           // --- STATE PROFIL LEMBAGA ---
           const [profile, setProfile] = useState(null);
@@ -166,6 +130,24 @@ const { useState, useEffect } = React;
     setInstructorsLoading(false);
   }
   fetchInstructors();
+}, []);
+                useEffect(() => {
+  async function fetchSchedules() {
+    setSchedulesLoading(true);
+    const { data, error } = await supabase
+      .from('schedules')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching schedules:', error);
+      setSchedules([]);
+    } else {
+      setSchedules(data || []);
+    }
+    setSchedulesLoading(false);
+  }
+  fetchSchedules();
 }, []);
           // --- FUNGSI NAVIGASI ---
           const navigateToSchedule = (category) => {
@@ -480,94 +462,121 @@ const { useState, useEffect } = React;
                 );
 
               case 'Jadwal':
-                return (
-                  <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-                    <div className="text-center mb-10">
-                      <h2 className="text-3xl font-bold text-slate-800 mb-4">Jadwal & Reservasi</h2>
-                      <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
+  // Filter jadwal berdasarkan kategori yang dipilih
+  const filteredSchedules = schedules.filter(s => s.category === scheduleCategory);
+
+  if (schedulesLoading) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+        <p className="text-slate-500 mt-4">Memuat jadwal...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold text-slate-800 mb-4">Jadwal & Reservasi</h2>
+        <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
+      </div>
+
+      {/* Tombol filter kategori */}
+      <div className="flex flex-wrap justify-center gap-2 mb-10">
+        {['Pelatihan', 'Webinar', 'Workshop'].map(category => (
+          <button 
+            key={category} 
+            onClick={() => { setScheduleCategory(category); setExpandedScheduleId(null); }}
+            className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${
+              scheduleCategory === category 
+                ? 'bg-alo-blue text-white shadow-md' 
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      {/* Daftar jadwal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {filteredSchedules.length === 0 ? (
+          <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+            <span className="material-symbols-outlined text-[48px] text-slate-300 mb-4">event_busy</span>
+            <p className="font-medium">Belum ada jadwal {scheduleCategory.toLowerCase()} dalam waktu dekat.</p>
+          </div>
+        ) : (
+          filteredSchedules.map((sch) => (
+            <div key={sch.id} className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 group">
+              {/* Banner & Judul */}
+              <div className="relative h-56 md:h-64 overflow-hidden cursor-pointer" onClick={() => toggleDescription(sch.id)}>
+                <img src={sch.img} alt={sch.course} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <div className="absolute top-4 right-4">
+                  <span className={`px-4 py-1.5 text-xs font-bold rounded-full shadow-md backdrop-blur-md ${
+                    sch.status === 'Tersedia' ? 'bg-green-500/90 text-white' : 'bg-orange-500/90 text-white'
+                  }`}>
+                    {sch.status}
+                  </span>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">{sch.course}</h3>
+                </div>
+              </div>
+
+              {/* Detail */}
+              <div className="p-6 md:p-8 flex flex-col flex-grow bg-white relative z-10">
+                <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600 mb-6 font-medium">
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-alo-blue">calendar_month</span> {sch.date}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-orange-500">schedule</span> {sch.time}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-teal-500">group</span> {sch.quota}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-slate-500 text-sm">Investasi</span>
+                  <span className="text-2xl font-black text-alo-blue tracking-tight">{sch.price}</span>
+                </div>
+
+                {/* Deskripsi (toggle) */}
+                <div className="mb-6">
+                  <button 
+                    onClick={() => toggleDescription(sch.id)} 
+                    className="w-full flex justify-between items-center py-3 px-4 bg-slate-50 rounded-xl text-sm font-bold text-slate-600 hover:text-alo-blue transition-colors border border-slate-100"
+                  >
+                    Detail Pelatihan
+                    <span className={`material-symbols-outlined transition-transform duration-300 ${expandedScheduleId === sch.id ? 'rotate-180' : ''}`}>
+                      expand_more
+                    </span>
+                  </button>
+                  {expandedScheduleId === sch.id && (
+                    <div className="mt-3 p-4 bg-blue-50/50 rounded-xl text-sm text-slate-600 border border-blue-100 animate-slide-down leading-relaxed">
+                      <p>{sch.description}</p>
                     </div>
+                  )}
+                </div>
 
-                    <div className="flex flex-wrap justify-center gap-2 mb-10">
-                      {Object.keys(schedulesData).map(category => (
-                        <button key={category} onClick={() => {setScheduleCategory(category); setExpandedScheduleId(null);}}
-                          className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${scheduleCategory === category ? 'bg-alo-blue text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {schedulesData[scheduleCategory].map((sch) => (
-                        <div key={sch.id} className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 group">
-                          
-                          <div className="relative h-56 md:h-64 overflow-hidden cursor-pointer" onClick={() => toggleDescription(sch.id)}>
-                            <img src={sch.img} alt={sch.course} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                            
-                            <div className="absolute top-4 right-4">
-                               <span className={`px-4 py-1.5 text-xs font-bold rounded-full shadow-md backdrop-blur-md ${sch.status === 'Tersedia' ? 'bg-green-500/90 text-white' : 'bg-orange-500/90 text-white'}`}>
-                                  {sch.status}
-                               </span>
-                            </div>
-                            <div className="absolute bottom-4 left-4 right-4">
-                               <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">{sch.course}</h3>
-                            </div>
-                          </div>
-
-                          <div className="p-6 md:p-8 flex flex-col flex-grow bg-white relative z-10">
-                            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600 mb-6 font-medium">
-                              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-alo-blue">calendar_month</span> {sch.date}</span>
-                              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-orange-500">schedule</span> {sch.time}</span>
-                              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-teal-500">group</span> {sch.quota}</span>
-                            </div>
-
-                            <div className="flex items-center justify-between mb-6">
-                               <span className="text-slate-500 text-sm">Investasi</span>
-                               <span className="text-2xl font-black text-alo-blue tracking-tight">{sch.price}</span>
-                            </div>
-
-                            <div className="mb-6">
-                              <button 
-                                onClick={() => toggleDescription(sch.id)} 
-                                className="w-full flex justify-between items-center py-3 px-4 bg-slate-50 rounded-xl text-sm font-bold text-slate-600 hover:text-alo-blue transition-colors border border-slate-100"
-                              >
-                                Detail Pelatihan
-                                <span className={`material-symbols-outlined transition-transform duration-300 ${expandedScheduleId === sch.id ? 'rotate-180' : ''}`}>
-                                  expand_more
-                                </span>
-                              </button>
-                              
-                              {expandedScheduleId === sch.id && (
-                                <div className="mt-3 p-4 bg-blue-50/50 rounded-xl text-sm text-slate-600 border border-blue-100 animate-slide-down leading-relaxed">
-                                  <p>{sch.description}</p>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="mt-auto flex items-center gap-3">
-                              <button onClick={() => handleBookingClick(sch)} className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center">
-                                Pesan Pelatihan
-                              </button>
-                              
-                              <button onClick={() => openShareModal(sch.course, 'course')} className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" title="Bagikan Pelatihan">
-                                 <span className="material-symbols-outlined text-[22px]">share</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {schedulesData[scheduleCategory].length === 0 && (
-                      <div className="py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
-                        <span className="material-symbols-outlined text-[48px] text-slate-300 mb-4">event_busy</span>
-                        <p className="font-medium">Belum ada jadwal {scheduleCategory.toLowerCase()} dalam waktu dekat.</p>
-                      </div>
-                    )}
-                  </div>
-                );
-
+                {/* Tombol Aksi */}
+                <div className="mt-auto flex items-center gap-3">
+                  <button onClick={() => handleBookingClick(sch)} className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center">
+                    Pesan Pelatihan
+                  </button>
+                  <button onClick={() => openShareModal(sch.course, 'course')} className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" title="Bagikan Pelatihan">
+                    <span className="material-symbols-outlined text-[22px]">share</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
               case 'Pengajar':
   if (instructorsLoading) {
     return (
