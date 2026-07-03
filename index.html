@@ -26,11 +26,6 @@ const { useState, useEffect } = React;
         // --- DATA STATIS (UNTUK SEMENTARA) ---
         
         const newsList = [
-          { id: 1, title: 'Pentingnya Sertifikasi BHD bagi Seluruh Karyawan Rumah Sakit di Era Modern', date: '10 Juni 2026', category: 'Artikel', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=500&q=80' },
-          { id: 2, title: 'MedikaEdu Sukses Gelar Pelatihan Manajemen Bangsal Angkatan ke-15', date: '05 Juni 2026', category: 'Berita', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=500&q=80' },
-          { id: 3, title: 'Update Pedoman Pencegahan & Pengendalian Infeksi (PPI) Terbaru Tahun 2026', date: '28 Mei 2026', category: 'Edukasi', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ad?auto=format&fit=crop&w=500&q=80' },
-          { id: 4, title: 'Mengenal Lebih Jauh Peran Perawat dalam Telemedicine di Indonesia', date: '15 Mei 2026', category: 'Artikel', img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=500&q=80' },
-        ];
 
         const orgStructure = [
           { id: 1, name: 'Dr. Hendra Wijaya, MARS', role: 'Direktur Utama', type: 'Pimpinan' },
@@ -69,6 +64,8 @@ const { useState, useEffect } = React;
           const [instructorsLoading, setInstructorsLoading] = useState(true);
           const [schedules, setSchedules] = useState([]);
           const [schedulesLoading, setSchedulesLoading] = useState(true);
+          const [news, setNews] = useState([]);
+          const [newsLoading, setNewsLoading] = useState(true);      
 
           // --- STATE PROFIL LEMBAGA ---
           const [profile, setProfile] = useState(null);
@@ -148,6 +145,24 @@ const { useState, useEffect } = React;
     setSchedulesLoading(false);
   }
   fetchSchedules();
+}, []);
+                useEffect(() => {
+  async function fetchNews() {
+    setNewsLoading(true);
+    const { data, error } = await supabase
+      .from('news')
+      .select('*')
+      .order('id', { ascending: false }); // Berita terbaru di atas
+
+    if (error) {
+      console.error('Error fetching news:', error);
+      setNews([]);
+    } else {
+      setNews(data || []);
+    }
+    setNewsLoading(false);
+  }
+  fetchNews();
 }, []);
           // --- FUNGSI NAVIGASI ---
           const navigateToSchedule = (category) => {
@@ -300,39 +315,41 @@ const { useState, useEffect } = React;
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          {newsList.map((news) => (
-                            <div key={news.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 group cursor-pointer flex flex-col">
-                              <div className="h-44 overflow-hidden relative">
-                                <img src={news.img} alt={news.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                              </div>
-                              <div className="p-5 flex flex-col flex-grow">
-                                <div className="flex justify-between items-center mb-3">
-                                  <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{news.category}</span>
-                                  <span className="text-xs text-slate-400 font-medium">{news.date}</span>
-                                </div>
-                                <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{news.title}</h3>
-                                
-                                <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                                  <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
-                                    Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                                  </span>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); openShareModal(news.title, 'news'); }}
-                                    className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                                    title="Bagikan Artikel"
-                                  >
-                                    <span className="material-symbols-outlined text-[18px]">share</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                );
-
+                          {newsLoading ? (
+                        <div className="col-span-full text-center py-8">
+                        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                        <p className="text-slate-500 mt-2">Memuat berita...</p>
+   </div>
+) : news.length === 0 ? (
+  <div className="col-span-full text-center py-8 text-slate-400">Belum ada berita.</div>
+) : (
+  news.slice(0, 4).map((item) => (
+    <div key={item.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 group cursor-pointer flex flex-col">
+      <div className="h-44 overflow-hidden relative">
+        <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+      </div>
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{item.category}</span>
+          <span className="text-xs text-slate-400 font-medium">{item.date}</span>
+        </div>
+        <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{item.title}</h3>
+        <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
+          <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
+            Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); openShareModal(item.title, 'news'); }}
+            className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
+            title="Bagikan Artikel"
+          >
+            <span className="material-symbols-outlined text-[18px]">share</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  ))
+)}
               case 'Profil':
                 if (profileLoading) {
                   return (
@@ -613,42 +630,57 @@ const { useState, useEffect } = React;
       </div>
     </div>
   );
-              case 'Berita':
-                return (
-                  <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-                    <div className="text-center mb-12"><h2 className="text-3xl font-bold text-slate-800">Semua Berita & Artikel</h2></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                      {newsList.map((news) => (
-                        <div key={news.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
-                          <div className="h-48 overflow-hidden relative">
-                            <img src={news.img} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          </div>
-                          <div className="p-5 flex flex-col flex-grow">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{news.category}</span>
-                              <span className="text-xs text-slate-400 font-medium">{news.date}</span>
-                            </div>
-                            <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{news.title}</h3>
-                            
-                            <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                              <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
-                                Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                              </span>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openShareModal(news.title, 'news'); }}
-                                className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                                title="Bagikan Artikel"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">share</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-
+             case 'Berita':
+  if (newsLoading) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+        <p className="text-slate-500 mt-4">Memuat berita...</p>
+      </div>
+    );
+  }
+  if (news.length === 0) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <p className="text-slate-500">Belum ada berita atau artikel.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-slate-800">Semua Berita & Artikel</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {news.map((item) => (
+          <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
+            <div className="h-48 overflow-hidden relative">
+              <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div className="p-5 flex flex-col flex-grow">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{item.category}</span>
+                <span className="text-xs text-slate-400 font-medium">{item.date}</span>
+              </div>
+              <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{item.title}</h3>
+              <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
+                <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
+                  Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); openShareModal(item.title, 'news'); }}
+                  className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
+                  title="Bagikan Artikel"
+                >
+                  <span className="material-symbols-outlined text-[18px]">share</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
               case 'Galeri':
                 return (
                   <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
