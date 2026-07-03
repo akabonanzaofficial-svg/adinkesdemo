@@ -26,6 +26,11 @@ const { useState, useEffect } = React;
         // --- DATA STATIS (UNTUK SEMENTARA) ---
         
         const newsList = [
+          { id: 1, title: 'Pentingnya Sertifikasi BHD bagi Seluruh Karyawan Rumah Sakit di Era Modern', date: '10 Juni 2026', category: 'Artikel', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=500&q=80' },
+          { id: 2, title: 'MedikaEdu Sukses Gelar Pelatihan Manajemen Bangsal Angkatan ke-15', date: '05 Juni 2026', category: 'Berita', img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=500&q=80' },
+          { id: 3, title: 'Update Pedoman Pencegahan & Pengendalian Infeksi (PPI) Terbaru Tahun 2026', date: '28 Mei 2026', category: 'Edukasi', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ad?auto=format&fit=crop&w=500&q=80' },
+          { id: 4, title: 'Mengenal Lebih Jauh Peran Perawat dalam Telemedicine di Indonesia', date: '15 Mei 2026', category: 'Artikel', img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=500&q=80' },
+        ];
 
         const orgStructure = [
           { id: 1, name: 'Dr. Hendra Wijaya, MARS', role: 'Direktur Utama', type: 'Pimpinan' },
@@ -64,8 +69,6 @@ const { useState, useEffect } = React;
           const [instructorsLoading, setInstructorsLoading] = useState(true);
           const [schedules, setSchedules] = useState([]);
           const [schedulesLoading, setSchedulesLoading] = useState(true);
-          const [news, setNews] = useState([]);
-          const [newsLoading, setNewsLoading] = useState(true);      
 
           // --- STATE PROFIL LEMBAGA ---
           const [profile, setProfile] = useState(null);
@@ -145,24 +148,6 @@ const { useState, useEffect } = React;
     setSchedulesLoading(false);
   }
   fetchSchedules();
-}, []);
-                useEffect(() => {
-  async function fetchNews() {
-    setNewsLoading(true);
-    const { data, error } = await supabase
-      .from('news')
-      .select('*')
-      .order('id', { ascending: false }); // Berita terbaru di atas
-
-    if (error) {
-      console.error('Error fetching news:', error);
-      setNews([]);
-    } else {
-      setNews(data || []);
-    }
-    setNewsLoading(false);
-  }
-  fetchNews();
 }, []);
           // --- FUNGSI NAVIGASI ---
           const navigateToSchedule = (category) => {
@@ -263,408 +248,432 @@ const { useState, useEffect } = React;
           };
 
           // --- RENDER KONTEN ---
-         const renderContent = () => {
-  switch (activeTab) {
-    case 'Beranda':
-      return (
-        <div className="animate-fade-in pb-12 w-full max-w-none px-0">
-          <section className="bg-alo-blue pt-12 pb-0 px-6 relative overflow-hidden">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end">
-              <div className="w-full md:w-3/5 pb-20 pt-10 z-10 text-center md:text-left">
-                <h1 className="text-4xl md:text-5xl lg:text-[54px] font-bold text-white mb-4 leading-tight tracking-tight">Layanan Cepat dan Tepat</h1>
-                <p className="text-xl text-blue-100 mb-12 font-medium">Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia</p>
-                <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-10">
-                  {heroActions.map(action => (
-                    <div key={action.id} className="flex flex-col items-center cursor-pointer group" onClick={action.action}>
-                      <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center relative transition-transform transform group-hover:scale-105 shadow-md">
-                        <div className="absolute inset-0 rounded-full border-[5px] border-white/30 scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <span className={`material-symbols-outlined text-[32px] md:text-[40px] icon-filled ${action.color}`}>{action.icon}</span>
-                      </div>
-                      <span className="text-white font-semibold text-sm md:text-base mt-4 transition-colors group-hover:text-blue-100">{action.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="w-full md:w-2/5 flex justify-center md:justify-end relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=700&q=80" 
-                  alt="Tenaga Medis" 
-                  className="h-[350px] md:h-[450px] object-cover object-top filter brightness-105 rounded-t-[100px] md:rounded-none md:rounded-tl-[100px]"
-                  style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%)' }}
-                />
-              </div>
-            </div>
-          </section>
+          const renderContent = () => {
+            switch (activeTab) {
+              case 'Beranda':
+                return (
+                  <div className="animate-fade-in pb-12 w-full max-w-none px-0">
+                    <section className="bg-alo-blue pt-12 pb-0 px-6 relative overflow-hidden">
+                      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end">
+                        <div className="w-full md:w-3/5 pb-20 pt-10 z-10 text-center md:text-left">
+                          <h1 className="text-4xl md:text-5xl lg:text-[54px] font-bold text-white mb-4 leading-tight tracking-tight">
+                            Adinkes Training Center
+                          </h1>
+                          <p className="text-xl text-blue-100 mb-12 font-medium">
+                            Lembaga Pelatihan dan Edukasi Medis Terbaik di Indonesia
+                          </p>
 
-          <section className="bg-slate-50 px-6 py-16">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex justify-between items-end mb-8">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Info Kesehatan & Artikel</h2>
-                  <p className="text-slate-500 text-sm md:text-base">Wawasan terbaru dari pakar kesehatan kami.</p>
-                </div>
-                <button onClick={() => setActiveTab('Berita')} className="hidden md:flex text-alo-blue font-bold items-center gap-1 hover:text-blue-800 transition-colors">
-                  Lihat Semua <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {newsLoading ? (
-                  <div className="col-span-full text-center py-8">
-                    <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-                    <p className="text-slate-500 mt-2">Memuat berita...</p>
-                  </div>
-                ) : news.length === 0 ? (
-                  <div className="col-span-full text-center py-8 text-slate-400">Belum ada berita.</div>
-                ) : (
-                  news.slice(0, 4).map((item) => (
-                    <div key={item.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 group cursor-pointer flex flex-col">
-                      <div className="h-44 overflow-hidden relative">
-                        <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                      </div>
-                      <div className="p-5 flex flex-col flex-grow">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{item.category}</span>
-                          <span className="text-xs text-slate-400 font-medium">{item.date}</span>
+                          <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-10">
+                            {heroActions.map(action => (
+                              <div key={action.id} className="flex flex-col items-center cursor-pointer group" onClick={action.action}>
+                                <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center relative transition-transform transform group-hover:scale-105 shadow-md">
+                                  <div className="absolute inset-0 rounded-full border-[5px] border-white/30 scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                  <span className={`material-symbols-outlined text-[32px] md:text-[40px] icon-filled ${action.color}`}>{action.icon}</span>
+                                </div>
+                                <span className="text-white font-semibold text-sm md:text-base mt-4 transition-colors group-hover:text-blue-100">{action.label}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{item.title}</h3>
-                        <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                          <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
-                            Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                          </span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); openShareModal(item.title, 'news'); }}
-                            className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                            title="Bagikan Artikel"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">share</span>
+
+                        <div className="w-full md:w-2/5 flex justify-center md:justify-end relative">
+                          <img 
+                            src="https://i.ibb.co.com/Jj4MXX6Q/Bantu-para-penghafal-quran.png" 
+                            alt="Tenaga Medis" 
+                            className="h-[350px] md:h-[450px] object-cover object-top filter brightness-105 rounded-t-[100px] md:rounded-none md:rounded-tl-[100px]"
+                            style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%)' }}
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="bg-slate-50 px-6 py-16">
+                      <div className="max-w-7xl mx-auto">
+                        <div className="flex justify-between items-end mb-8">
+                          <div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Info Kesehatan & Artikel</h2>
+                            <p className="text-slate-500 text-sm md:text-base">Wawasan terbaru dari pakar kesehatan kami.</p>
+                          </div>
+                          <button onClick={() => setActiveTab('Berita')} className="hidden md:flex text-alo-blue font-bold items-center gap-1 hover:text-blue-800 transition-colors">
+                            Lihat Semua <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                           </button>
                         </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                          {newsList.map((news) => (
+                            <div key={news.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 group cursor-pointer flex flex-col">
+                              <div className="h-44 overflow-hidden relative">
+                                <img src={news.img} alt={news.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                              </div>
+                              <div className="p-5 flex flex-col flex-grow">
+                                <div className="flex justify-between items-center mb-3">
+                                  <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{news.category}</span>
+                                  <span className="text-xs text-slate-400 font-medium">{news.date}</span>
+                                </div>
+                                <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{news.title}</h3>
+                                
+                                <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
+                                  <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
+                                    Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                                  </span>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openShareModal(news.title, 'news'); }}
+                                    className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
+                                    title="Bagikan Artikel"
+                                  >
+                                    <span className="material-symbols-outlined text-[18px]">share</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                );
+
+              case 'Profil':
+                if (profileLoading) {
+                  return (
+                    <div className="animate-fade-in max-w-5xl mx-auto px-6 py-12 text-center">
+                      <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                      <p className="text-slate-500 mt-4">Memuat profil lembaga...</p>
+                    </div>
+                  );
+                }
+                if (!profile) {
+                  return <div className="p-12 text-center text-slate-500">Profil belum tersedia.</div>;
+                }
+                return (
+                  <div className="animate-fade-in max-w-5xl mx-auto space-y-16 px-6 py-12">
+                    <div className="text-center">
+                      <h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Lembaga</h2>
+                      <div className="w-20 h-1 bg-alo-blue mx-auto rounded-full mb-8"></div>
+                    </div>
+                    
+                    <div className="flex flex-col md:flex-row gap-12 items-center">
+                      <div className="w-full md:w-1/2">
+                        <img src={profile.banner_url || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80'} alt="Gedung Lembaga" className="rounded-3xl shadow-xl w-full object-cover h-[400px]" />
+                      </div>
+                      <div className="w-full md:w-1/2 space-y-6 text-slate-600 leading-relaxed">
+                        <h3 className="text-2xl font-bold text-blue-900">{profile.name || 'Medika Edukasi Nusantara'}</h3>
+                        <p>{profile.tagline || 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia'}</p>
+                        <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-alo-blue">
+                          <h4 className="font-bold text-blue-900 mb-2 text-lg">Visi Kami</h4>
+                          <p>{profile.visi || 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.'}</p>
+                        </div>
+                        <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-teal-500">
+                          <h4 className="font-bold text-blue-900 mb-2 text-lg">Misi</h4>
+                          <p className="whitespace-pre-line">{profile.misi || '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...'}</p>
+                        </div>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </section>
-        </div>
-      );
 
-    case 'Profil':
-      if (profileLoading) {
-        return (
-          <div className="animate-fade-in max-w-5xl mx-auto px-6 py-12 text-center">
-            <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-            <p className="text-slate-500 mt-4">Memuat profil lembaga...</p>
-          </div>
-        );
-      }
-      if (!profile) {
-        return <div className="p-12 text-center text-slate-500">Profil belum tersedia.</div>;
-      }
-      return (
-        <div className="animate-fade-in max-w-5xl mx-auto space-y-16 px-6 py-12">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Lembaga</h2>
-            <div className="w-20 h-1 bg-alo-blue mx-auto rounded-full mb-8"></div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-12 items-center">
-            <div className="w-full md:w-1/2">
-              <img src={profile.banner_url || "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80"} alt="Gedung Lembaga" className="rounded-3xl shadow-xl w-full object-cover h-[400px]" />
-            </div>
-            <div className="w-full md:w-1/2 space-y-6 text-slate-600 leading-relaxed">
-              <h3 className="text-2xl font-bold text-blue-900">{profile.name || 'Medika Edukasi Nusantara'}</h3>
-              <p>{profile.tagline || 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia'}</p>
-              <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-alo-blue">
-                <h4 className="font-bold text-blue-900 mb-2 text-lg">Visi Kami</h4>
-                <p>{profile.visi || 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.'}</p>
-              </div>
-              <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-teal-500">
-                <h4 className="font-bold text-blue-900 mb-2 text-lg">Misi</h4>
-                <p className="whitespace-pre-line">{profile.misi || '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...'}</p>
-              </div>
-            </div>
-          </div>
-          <div className="pt-12 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">location_on</span> Alamat</h4>
-              <p className="text-slate-600">{profile.alamat || 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345'}</p>
-            </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">contact_mail</span> Kontak</h4>
-              <div className="space-y-2 text-sm text-slate-600">
-                <p><span className="font-semibold">Telepon:</span> {profile.telepon || '-'}</p>
-                <p><span className="font-semibold">WhatsApp:</span> {profile.whatsapp || '-'}</p>
-                <p><span className="font-semibold">Email:</span> {profile.email || '-'}</p>
-                <p><span className="font-semibold">Instagram:</span> <a href={profile.instagram || '#'} target="_blank" className="text-alo-blue hover:underline">{profile.instagram || '-'}</a></p>
-              </div>
-            </div>
-          </div>
-          <div className="pt-12 border-t border-slate-200">
-            <div className="text-center mb-10 max-w-2xl mx-auto">
-              <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
-              <p className="text-slate-500 leading-relaxed">Keberhasilan lembaga kami didukung oleh jajaran pimpinan dan manajemen yang kompeten, berdedikasi tinggi, serta memiliki pengalaman puluhan tahun.</p>
-            </div>
-            <div className="flex flex-col items-center space-y-8">
-              <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative">
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
-                  <span className="material-symbols-outlined text-[24px]">group</span>
-                </div>
-                <h4 className="text-lg font-bold text-slate-800 mt-4">{orgStructure[0]?.name || 'Dr. Hendra Wijaya, MARS'}</h4>
-                <p className="text-alo-blue font-semibold text-sm">{orgStructure[0]?.role || 'Direktur Utama'}</p>
-              </div>
-              <div className="w-px h-8 bg-slate-300"></div>
-              <div className="w-full max-w-2xl h-px bg-slate-300 relative">
-                <div className="absolute left-0 top-0 w-px h-8 bg-slate-300"></div>
-                <div className="absolute right-0 top-0 w-px h-8 bg-slate-300"></div>
-                <div className="absolute left-1/2 top-0 w-px h-8 bg-slate-300"></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl pt-8">
-                {orgStructure.slice(1).map(person => (
-                  <div key={person.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow">
-                    <h4 className="font-bold text-slate-800">{person.name}</h4>
-                    <p className="text-teal-600 text-sm mt-1">{person.role}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-
-    case 'Program':
-      return (
-        <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">Program Utama Pelatihan</h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">Modul pelatihan yang disesuaikan dengan kebutuhan terkini di faskes.</p>
-          </div>
-          {loading ? (
-            <div className="text-center py-12">
-              <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-              <p className="text-slate-500 mt-4">Memuat data program...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {programs.map((prog) => {
-                const style = getIconStyle(prog.icon);
-                return (
-                  <div key={prog.id} className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-slate-100 group flex flex-col h-full">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${style.bg} ${style.color} group-hover:scale-110 transition-transform`}>
-                      <span className="material-symbols-outlined text-[28px]">{prog.icon}</span>
+                    <div className="pt-12 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">location_on</span> Alamat</h4>
+                        <p className="text-slate-600">{profile.alamat || 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345'}</p>
+                      </div>
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">contact_mail</span> Kontak</h4>
+                        <div className="space-y-2 text-sm text-slate-600">
+                          <p><span className="font-semibold">Telepon:</span> {profile.telepon || '-'}</p>
+                          <p><span className="font-semibold">WhatsApp:</span> {profile.whatsapp || '-'}</p>
+                          <p><span className="font-semibold">Email:</span> {profile.email || '-'}</p>
+                          <p><span className="font-semibold">Instagram:</span> <a href={profile.instagram || '#'} target="_blank" className="text-alo-blue hover:underline">{profile.instagram || '-'}</a></p>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-3">{prog.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-grow">{prog.description}</p>
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                      <button onClick={() => navigateToSchedule('Pelatihan')} className="text-alo-blue font-semibold flex items-center gap-1 hover:text-blue-800 text-sm">
-                        Jadwal <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                      </button>
-                      <button onClick={() => alert('Fitur unduh modul akan segera tersedia.')} className="text-teal-600 font-semibold flex items-center gap-1 hover:text-teal-800 text-sm border-l border-slate-200 pl-4">
-                        <span className="material-symbols-outlined text-[16px]">download</span> Modul
-                      </button>
+
+                    <div className="pt-12 border-t border-slate-200">
+                      <div className="text-center mb-10 max-w-2xl mx-auto">
+                        <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
+                        <p className="text-slate-500 leading-relaxed">Keberhasilan lembaga kami didukung oleh jajaran pimpinan dan manajemen yang kompeten, berdedikasi tinggi, serta memiliki pengalaman puluhan tahun.</p>
+                      </div>
+                      
+                      <div className="flex flex-col items-center space-y-8">
+                        <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative">
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
+                            <span className="material-symbols-outlined text-[24px]">group</span>
+                          </div>
+                          <h4 className="text-lg font-bold text-slate-800 mt-4">{orgStructure[0]?.name || 'Dr. Hendra Wijaya, MARS'}</h4>
+                          <p className="text-alo-blue font-semibold text-sm">{orgStructure[0]?.role || 'Direktur Utama'}</p>
+                        </div>
+                        
+                        <div className="w-px h-8 bg-slate-300"></div>
+                        <div className="w-full max-w-2xl h-px bg-slate-300 relative">
+                            <div className="absolute left-0 top-0 w-px h-8 bg-slate-300"></div>
+                            <div className="absolute right-0 top-0 w-px h-8 bg-slate-300"></div>
+                            <div className="absolute left-1/2 top-0 w-px h-8 bg-slate-300"></div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl pt-8">
+                          {orgStructure.slice(1).map(person => (
+                            <div key={person.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow">
+                              <h4 className="font-bold text-slate-800">{person.name}</h4>
+                              <p className="text-teal-600 text-sm mt-1">{person.role}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          )}
-        </div>
-      );
 
-    case 'Jadwal':
-      const filteredSchedules = schedules.filter(s => s.category === scheduleCategory);
-      if (schedulesLoading) {
-        return (
-          <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
-            <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-            <p className="text-slate-500 mt-4">Memuat jadwal...</p>
-          </div>
-        );
-      }
-      return (
-        <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">Jadwal & Reservasi</h2>
-            <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {['Pelatihan', 'Webinar', 'Workshop'].map(category => (
-              <button 
-                key={category} 
-                onClick={() => { setScheduleCategory(category); setExpandedScheduleId(null); }}
-                className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${scheduleCategory === category ? 'bg-alo-blue text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {filteredSchedules.length === 0 ? (
-              <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
-                <span className="material-symbols-outlined text-[48px] text-slate-300 mb-4">event_busy</span>
-                <p className="font-medium">Belum ada jadwal {scheduleCategory.toLowerCase()} dalam waktu dekat.</p>
-              </div>
-            ) : (
-              filteredSchedules.map((sch) => (
-                <div key={sch.id} className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 group">
-                  <div className="relative h-56 md:h-64 overflow-hidden cursor-pointer" onClick={() => toggleDescription(sch.id)}>
-                    <img src={sch.img} alt={sch.course} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                    <div className="absolute top-4 right-4">
-                      <span className={`px-4 py-1.5 text-xs font-bold rounded-full shadow-md backdrop-blur-md ${sch.status === 'Tersedia' ? 'bg-green-500/90 text-white' : 'bg-orange-500/90 text-white'}`}>
-                        {sch.status}
-                      </span>
+              case 'Program':
+                return (
+                  <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+                    <div className="text-center mb-12">
+                      <h2 className="text-3xl font-bold text-slate-800 mb-4">Program Utama Pelatihan</h2>
+                      <p className="text-slate-500 max-w-2xl mx-auto">Modul pelatihan yang disesuaikan dengan kebutuhan terkini di faskes.</p>
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">{sch.course}</h3>
-                    </div>
+                    {loading ? (
+                      <div className="text-center py-12">
+                        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                        <p className="text-slate-500 mt-4">Memuat data program...</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {programs.map((prog) => {
+                          const style = getIconStyle(prog.icon);
+                          return (
+                            <div key={prog.id} className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-slate-100 group flex flex-col h-full">
+                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${style.bg} ${style.color} group-hover:scale-110 transition-transform`}>
+                                <span className="material-symbols-outlined text-[28px]">{prog.icon}</span>
+                              </div>
+                              <h3 className="text-xl font-bold text-slate-800 mb-3">{prog.title}</h3>
+                              <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-grow">{prog.description}</p>
+                              
+                              <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                                <button onClick={() => navigateToSchedule('Pelatihan')} className="text-alo-blue font-semibold flex items-center gap-1 hover:text-blue-800 text-sm">
+                                  Jadwal <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                                </button>
+                                <button onClick={() => alert('Fitur unduh modul akan segera tersedia.')} className="text-teal-600 font-semibold flex items-center gap-1 hover:text-teal-800 text-sm border-l border-slate-200 pl-4">
+                                  <span className="material-symbols-outlined text-[16px]">download</span> Modul
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="p-6 md:p-8 flex flex-col flex-grow bg-white relative z-10">
-                    <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600 mb-6 font-medium">
-                      <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-alo-blue">calendar_month</span> {sch.date}</span>
-                      <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-orange-500">schedule</span> {sch.time}</span>
-                      <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-teal-500">group</span> {sch.quota}</span>
-                    </div>
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="text-slate-500 text-sm">Investasi</span>
-                      <span className="text-2xl font-black text-alo-blue tracking-tight">{sch.price}</span>
-                    </div>
-                    <div className="mb-6">
-                      <button onClick={() => toggleDescription(sch.id)} className="w-full flex justify-between items-center py-3 px-4 bg-slate-50 rounded-xl text-sm font-bold text-slate-600 hover:text-alo-blue transition-colors border border-slate-100">
-                        Detail Pelatihan
-                        <span className={`material-symbols-outlined transition-transform duration-300 ${expandedScheduleId === sch.id ? 'rotate-180' : ''}`}>expand_more</span>
-                      </button>
-                      {expandedScheduleId === sch.id && (
-                        <div className="mt-3 p-4 bg-blue-50/50 rounded-xl text-sm text-slate-600 border border-blue-100 animate-slide-down leading-relaxed">
-                          <p>{sch.description}</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-auto flex items-center gap-3">
-                      <button onClick={() => handleBookingClick(sch)} className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center">
-                        Pesan Pelatihan
-                      </button>
-                      <button onClick={() => openShareModal(sch.course, 'course')} className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" title="Bagikan Pelatihan">
-                        <span className="material-symbols-outlined text-[22px]">share</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      );
+                );
 
-    case 'Pengajar':
-      if (instructorsLoading) {
-        return (
-          <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
-            <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-            <p className="text-slate-500 mt-4">Memuat data pengajar...</p>
-          </div>
-        );
-      }
-      if (instructors.length === 0) {
-        return (
-          <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
-            <p className="text-slate-500">Belum ada data pengajar.</p>
-          </div>
-        );
-      }
-      return (
-        <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-          <div className="text-center mb-12"><h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Pengajar Ahli</h2></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {instructors.map((inst) => (
-              <div key={inst.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 text-center group">
-                <div className="h-48 overflow-hidden relative">
-                  <img src={inst.img} alt={inst.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
-                <div className="px-6 pb-8 pt-6">
-                  <h3 className="text-xl font-bold text-slate-800 mb-1">{inst.name}</h3>
-                  <p className="text-alo-blue text-sm font-medium mb-4">{inst.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
+              case 'Jadwal':
+  // Filter jadwal berdasarkan kategori yang dipilih
+  const filteredSchedules = schedules.filter(s => s.category === scheduleCategory);
 
-    case 'Berita':
-      if (newsLoading) {
-        return (
-          <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
-            <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-            <p className="text-slate-500 mt-4">Memuat berita...</p>
-          </div>
-        );
-      }
-      if (news.length === 0) {
-        return (
-          <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
-            <p className="text-slate-500">Belum ada berita atau artikel.</p>
-          </div>
-        );
-      }
-      return (
-        <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-          <div className="text-center mb-12"><h2 className="text-3xl font-bold text-slate-800">Semua Berita & Artikel</h2></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {news.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
-                <div className="h-48 overflow-hidden relative">
-                  <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{item.category}</span>
-                    <span className="text-xs text-slate-400 font-medium">{item.date}</span>
-                  </div>
-                  <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{item.title}</h3>
-                  <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                    <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
-                      Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openShareModal(item.title, 'news'); }}
-                      className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                      title="Bagikan Artikel"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">share</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-
-    case 'Galeri':
-      return (
-        <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-2">Galeri Kegiatan</h2>
-            <p className="text-slate-500">Dokumentasi momen berharga selama proses pelatihan berlangsung.</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {galleryList.map((img, idx) => (
-              <div key={idx} className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-slate-200 shadow-sm hover:shadow-xl transition-all">
-                <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-alo-blue/0 group-hover:bg-alo-blue/20 transition-colors duration-300 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-4xl drop-shadow-lg">zoom_in</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-
-    default:
-      return <div>Halaman tidak ditemukan</div>;
+  if (schedulesLoading) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+        <p className="text-slate-500 mt-4">Memuat jadwal...</p>
+      </div>
+    );
   }
-};
+
+  return (
+    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold text-slate-800 mb-4">Jadwal & Reservasi</h2>
+        <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
+      </div>
+
+      {/* Tombol filter kategori */}
+      <div className="flex flex-wrap justify-center gap-2 mb-10">
+        {['Pelatihan', 'Webinar', 'Workshop'].map(category => (
+          <button 
+            key={category} 
+            onClick={() => { setScheduleCategory(category); setExpandedScheduleId(null); }}
+            className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${
+              scheduleCategory === category 
+                ? 'bg-alo-blue text-white shadow-md' 
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      {/* Daftar jadwal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {filteredSchedules.length === 0 ? (
+          <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+            <span className="material-symbols-outlined text-[48px] text-slate-300 mb-4">event_busy</span>
+            <p className="font-medium">Belum ada jadwal {scheduleCategory.toLowerCase()} dalam waktu dekat.</p>
+          </div>
+        ) : (
+          filteredSchedules.map((sch) => (
+            <div key={sch.id} className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 group">
+              {/* Banner & Judul */}
+              <div className="relative h-56 md:h-64 overflow-hidden cursor-pointer" onClick={() => toggleDescription(sch.id)}>
+                <img src={sch.img} alt={sch.course} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <div className="absolute top-4 right-4">
+                  <span className={`px-4 py-1.5 text-xs font-bold rounded-full shadow-md backdrop-blur-md ${
+                    sch.status === 'Tersedia' ? 'bg-green-500/90 text-white' : 'bg-orange-500/90 text-white'
+                  }`}>
+                    {sch.status}
+                  </span>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">{sch.course}</h3>
+                </div>
+              </div>
+
+              {/* Detail */}
+              <div className="p-6 md:p-8 flex flex-col flex-grow bg-white relative z-10">
+                <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600 mb-6 font-medium">
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-alo-blue">calendar_month</span> {sch.date}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-orange-500">schedule</span> {sch.time}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-teal-500">group</span> {sch.quota}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-slate-500 text-sm">Investasi</span>
+                  <span className="text-2xl font-black text-alo-blue tracking-tight">{sch.price}</span>
+                </div>
+
+                {/* Deskripsi (toggle) */}
+                <div className="mb-6">
+                  <button 
+                    onClick={() => toggleDescription(sch.id)} 
+                    className="w-full flex justify-between items-center py-3 px-4 bg-slate-50 rounded-xl text-sm font-bold text-slate-600 hover:text-alo-blue transition-colors border border-slate-100"
+                  >
+                    Detail Pelatihan
+                    <span className={`material-symbols-outlined transition-transform duration-300 ${expandedScheduleId === sch.id ? 'rotate-180' : ''}`}>
+                      expand_more
+                    </span>
+                  </button>
+                  {expandedScheduleId === sch.id && (
+                    <div className="mt-3 p-4 bg-blue-50/50 rounded-xl text-sm text-slate-600 border border-blue-100 animate-slide-down leading-relaxed">
+                      <p>{sch.description}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tombol Aksi */}
+                <div className="mt-auto flex items-center gap-3">
+                  <button onClick={() => handleBookingClick(sch)} className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center">
+                    Pesan Pelatihan
+                  </button>
+                  <button onClick={() => openShareModal(sch.course, 'course')} className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" title="Bagikan Pelatihan">
+                    <span className="material-symbols-outlined text-[22px]">share</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+              case 'Pengajar':
+  if (instructorsLoading) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+        <p className="text-slate-500 mt-4">Memuat data pengajar...</p>
+      </div>
+    );
+  }
+  if (instructors.length === 0) {
+    return (
+      <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+        <p className="text-slate-500">Belum ada data pengajar.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Pengajar Ahli</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {instructors.map((inst) => (
+          <div key={inst.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 text-center group">
+            <div className="h-48 overflow-hidden relative">
+              <img src={inst.img} alt={inst.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div className="px-6 pb-8 pt-6">
+              <h3 className="text-xl font-bold text-slate-800 mb-1">{inst.name}</h3>
+              <p className="text-alo-blue text-sm font-medium mb-4">{inst.role}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+              case 'Berita':
+                return (
+                  <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+                    <div className="text-center mb-12"><h2 className="text-3xl font-bold text-slate-800">Semua Berita & Artikel</h2></div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {newsList.map((news) => (
+                        <div key={news.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
+                          <div className="h-48 overflow-hidden relative">
+                            <img src={news.img} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          </div>
+                          <div className="p-5 flex flex-col flex-grow">
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-[10px] font-bold tracking-wider uppercase text-alo-blue bg-blue-50 px-2 py-1 rounded">{news.category}</span>
+                              <span className="text-xs text-slate-400 font-medium">{news.date}</span>
+                            </div>
+                            <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{news.title}</h3>
+                            
+                            <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
+                              <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
+                                Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                              </span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openShareModal(news.title, 'news'); }}
+                                className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors"
+                                title="Bagikan Artikel"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">share</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+
+              case 'Galeri':
+                return (
+                  <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+                    <div className="text-center mb-12">
+                      <h2 className="text-3xl font-bold text-slate-800 mb-2">Galeri Kegiatan</h2>
+                      <p className="text-slate-500">Dokumentasi momen berharga selama proses pelatihan berlangsung.</p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {galleryList.map((img, idx) => (
+                        <div key={idx} className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-slate-200 shadow-sm hover:shadow-xl transition-all">
+                          <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          <div className="absolute inset-0 bg-alo-blue/0 group-hover:bg-alo-blue/20 transition-colors duration-300 flex items-center justify-center">
+                             <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-4xl drop-shadow-lg">zoom_in</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+
+              default:
+                return <div>Halaman tidak ditemukan</div>;
+            }
+          };
+
           // --- RENDER UTAMA ---
           return (
             <div className="min-h-screen flex flex-col relative bg-slate-50">
