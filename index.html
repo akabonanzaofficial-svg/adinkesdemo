@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADINKESTC</title>
+    <title>Medika Edukasi Nusantara</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -69,27 +69,17 @@
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        // --- DATA STATIS (mock) untuk Galeri & Struktur Organisasi (belum ada tabel di Supabase) ---
+        // --- DATA STATIS (untuk Struktur Organisasi saja) ---
         const orgStructure = [
-          { id: 1, name: 'Asep Zaenal Mustofa, SKM, M.Epid, ', role: 'Direktur Utama', type: 'Pimpinan' },
-          { id: 2, name: 'Sheila Ridawaty, S.Kep, Ners, MKM', role: 'Wakil Direktur' },
-          { id: 3, name: 'Sutaryana, SKM, M.Kes', role: 'Manajer Pelatihan', type: 'Manajerial' },
-          { id: 4, name: 'Hari Mulyana, SP, M.Ap', role: 'Manajer Penunjang Pelatihan', type: 'Staf Ahli' },
-        ];
-
-        const galleryList = [
-          'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1527613426401-41d44465a3a5?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1584982751601-971dc37d6202?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?auto=format&fit=crop&w=600&q=80'
+          { id: 1, name: 'Dr. Hendra Wijaya, MARS', role: 'Direktur Utama', type: 'Pimpinan' },
+          { id: 2, name: 'Ns. Ratna Sari, S.Kep., M.Kes', role: 'Manajer Operasional & Pelatihan', type: 'Manajerial' },
+          { id: 3, name: 'Budi Kurniawan, S.E., M.M', role: 'Manajer Keuangan & Administrasi', type: 'Manajerial' },
+          { id: 4, name: 'dr. Sarah Humaira', role: 'Koordinator Ilmiah & Kurikulum', type: 'Staf Ahli' },
         ];
 
         // --- KOMPONEN UTAMA ---
         function App() {
+          // --- STATE NAVIGASI & UI ---
           const [activeTab, setActiveTab] = useState('Beranda');
           const [scheduleCategory, setScheduleCategory] = useState('Pelatihan');
           const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -97,8 +87,19 @@
           const [isModalOpen, setIsModalOpen] = useState(false);
           const [selectedCourse, setSelectedCourse] = useState(null);
           const [isBooked, setIsBooked] = useState(false);
+          const [isSubmitting, setIsSubmitting] = useState(false);
           const [shareModalData, setShareModalData] = useState({ isOpen: false, title: '', url: '', type: 'course' });
           const [copySuccess, setCopySuccess] = useState('');
+
+          // --- STATE UNTUK MODAL ARTIKEL ---
+          const [articleModal, setArticleModal] = useState({
+            isOpen: false,
+            title: '',
+            content: '',
+            img: '',
+            category: '',
+            date: ''
+          });
 
           // --- STATE DATA DARI SUPABASE ---
           const [programs, setPrograms] = useState([]);
@@ -111,21 +112,24 @@
           const [instructorsLoading, setInstructorsLoading] = useState(true);
           const [news, setNews] = useState([]);
           const [newsLoading, setNewsLoading] = useState(true);
+          const [gallery, setGallery] = useState([]);
+          const [galleryLoading, setGalleryLoading] = useState(true);
+
+          // --- CEK PARAMETER URL UNTUK TAB JADWAL ---
+          useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab === 'jadwal') {
+              setActiveTab('Jadwal');
+            }
+          }, []);
 
           // --- FETCH DATA ---
           useEffect(() => {
             async function fetchPrograms() {
               setLoading(true);
-              const { data, error } = await supabase
-                .from('programs')
-                .select('*')
-                .order('id', { ascending: true });
-              if (error) {
-                console.error('Error fetching programs:', error);
-                setPrograms([]);
-              } else {
-                setPrograms(data);
-              }
+              const { data, error } = await supabase.from('programs').select('*').order('id', { ascending: true });
+              if (error) { console.error('Error fetching programs:', error); setPrograms([]); } else { setPrograms(data); }
               setLoading(false);
             }
             fetchPrograms();
@@ -133,17 +137,8 @@
 
           useEffect(() => {
             async function fetchProfile() {
-              const { data, error } = await supabase
-                .from('institution_profile')
-                .select('*')
-                .eq('id', 1)
-                .single();
-              if (error) {
-                console.error('Error fetching profile:', error);
-                setProfile(null);
-              } else {
-                setProfile(data);
-              }
+              const { data, error } = await supabase.from('institution_profile').select('*').eq('id', 1).single();
+              if (error) { console.error('Error fetching profile:', error); setProfile(null); } else { setProfile(data); }
               setProfileLoading(false);
             }
             fetchProfile();
@@ -152,16 +147,8 @@
           useEffect(() => {
             async function fetchSchedules() {
               setSchedulesLoading(true);
-              const { data, error } = await supabase
-                .from('schedules')
-                .select('*')
-                .order('id', { ascending: true });
-              if (error) {
-                console.error('Error fetching schedules:', error);
-                setSchedules([]);
-              } else {
-                setSchedules(data || []);
-              }
+              const { data, error } = await supabase.from('schedules').select('*').order('id', { ascending: true });
+              if (error) { console.error('Error fetching schedules:', error); setSchedules([]); } else { setSchedules(data || []); }
               setSchedulesLoading(false);
             }
             fetchSchedules();
@@ -170,16 +157,8 @@
           useEffect(() => {
             async function fetchInstructors() {
               setInstructorsLoading(true);
-              const { data, error } = await supabase
-                .from('instructors')
-                .select('*')
-                .order('id', { ascending: true });
-              if (error) {
-                console.error('Error fetching instructors:', error);
-                setInstructors([]);
-              } else {
-                setInstructors(data || []);
-              }
+              const { data, error } = await supabase.from('instructors').select('*').order('id', { ascending: true });
+              if (error) { console.error('Error fetching instructors:', error); setInstructors([]); } else { setInstructors(data || []); }
               setInstructorsLoading(false);
             }
             fetchInstructors();
@@ -188,19 +167,21 @@
           useEffect(() => {
             async function fetchNews() {
               setNewsLoading(true);
-              const { data, error } = await supabase
-                .from('news')
-                .select('*')
-                .order('id', { ascending: false });
-              if (error) {
-                console.error('Error fetching news:', error);
-                setNews([]);
-              } else {
-                setNews(data || []);
-              }
+              const { data, error } = await supabase.from('news').select('*').order('id', { ascending: false });
+              if (error) { console.error('Error fetching news:', error); setNews([]); } else { setNews(data || []); }
               setNewsLoading(false);
             }
             fetchNews();
+          }, []);
+
+          useEffect(() => {
+            async function fetchGallery() {
+              setGalleryLoading(true);
+              const { data, error } = await supabase.from('gallery').select('*').order('id', { ascending: true });
+              if (error) { console.error('Error fetching gallery:', error); setGallery([]); } else { setGallery(data || []); }
+              setGalleryLoading(false);
+            }
+            fetchGallery();
           }, []);
 
           // --- NAVIGASI & UTILITY ---
@@ -209,45 +190,74 @@
             setActiveTab('Jadwal');
             setIsMobileMenuOpen(false);
             setExpandedScheduleId(null);
+            // Update URL agar share mengarah ke halaman jadwal
+            const url = new URL(window.location);
+            url.searchParams.set('tab', 'jadwal');
+            window.history.pushState({}, '', url);
             window.scrollTo(0, 0);
           };
 
+          // --- HANDLE BOOKING ---
           const handleBookingClick = (course) => {
             setSelectedCourse(course);
             setIsModalOpen(true);
             setIsBooked(false);
           };
 
-          const handleFormSubmit = (e) => {
+          const handleFormSubmit = async (e) => {
             e.preventDefault();
+            if (isSubmitting) return;
+            setIsSubmitting(true);
+
+            const form = e.target;
+            const nama = form.nama.value.trim();
+            const wa = form.wa.value.trim();
+
+            if (!nama || !wa) {
+              alert('Harap isi semua field.');
+              setIsSubmitting(false);
+              return;
+            }
+
+            const { data, error } = await supabase
+              .from('registrations')
+              .insert([
+                {
+                  schedule_id: selectedCourse.id,
+                  nama_peserta: nama,
+                  whatsapp: wa,
+                  status_pembayaran: 'Menunggu Pembayaran',
+                }
+              ]);
+
+            if (error) {
+              console.error('Error saving registration:', error);
+              alert('Gagal menyimpan pemesanan. Silakan coba lagi.');
+              setIsSubmitting(false);
+              return;
+            }
+
             setIsBooked(true);
+            setIsSubmitting(false);
             setTimeout(() => {
               setIsModalOpen(false);
               setIsBooked(false);
-            }, 2500);
+            }, 3000);
           };
 
-          const toggleDescription = (id) => {
-            if (expandedScheduleId === id) {
-              setExpandedScheduleId(null);
-            } else {
-              setExpandedScheduleId(id);
-            }
-          };
-
+          // --- SHARE ---
           const openShareModal = (title, type = 'course') => {
-            setShareModalData({
-              isOpen: true,
-              title: title,
-              url: window.location.href,
-              type: type
-            });
+            let url = window.location.href;
+            if (type === 'course') {
+              // Arahkan ke halaman jadwal
+              const base = window.location.origin + window.location.pathname;
+              url = base + '?tab=jadwal';
+            }
+            setShareModalData({ isOpen: true, title, url, type });
             setCopySuccess('');
           };
 
-          const closeShareModal = () => {
-            setShareModalData({ ...shareModalData, isOpen: false });
-          };
+          const closeShareModal = () => setShareModalData({ ...shareModalData, isOpen: false });
 
           const handleShareAction = (platform) => {
             let text = '';
@@ -281,10 +291,30 @@
             }
           };
 
+          // --- TOGGLE DESKRIPSI JADWAL ---
+          const toggleDescription = (id) => {
+            setExpandedScheduleId(expandedScheduleId === id ? null : id);
+          };
+
+          // --- OPEN ARTICLE MODAL ---
+          const openArticle = (item) => {
+            setArticleModal({
+              isOpen: true,
+              title: item.title,
+              content: item.content || 'Belum ada konten lengkap untuk artikel ini.',
+              img: item.img,
+              category: item.category,
+              date: item.date
+            });
+          };
+
+          const closeArticle = () => setArticleModal({ ...articleModal, isOpen: false });
+
+          // --- HERO ACTIONS ---
           const heroActions = [
             { id: 'pelatihan', label: 'Pelatihan', icon: 'school', color: 'text-blue-500', action: () => navigateToSchedule('Pelatihan') },
             { id: 'webinar', label: 'Webinar', icon: 'videocam', color: 'text-pink-500', action: () => navigateToSchedule('Webinar') },
-            { id: 'jadwal', label: 'Cek Jadwal', icon: 'calendar_month', color: 'text-orange-500', action: () => setActiveTab('Jadwal') },
+            { id: 'jadwal', label: 'Cek Jadwal', icon: 'calendar_month', color: 'text-orange-500', action: () => navigateToSchedule('Pelatihan') },
             { id: 'program', label: 'Silabus', icon: 'auto_stories', color: 'text-blue-500', action: () => setActiveTab('Program') }
           ];
 
@@ -307,8 +337,8 @@
                     <section className="bg-alo-blue pt-12 pb-0 px-6 relative overflow-hidden">
                       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end">
                         <div className="w-full md:w-3/5 pb-20 pt-10 z-10 text-center md:text-left">
-                          <h1 className="text-4xl md:text-5xl lg:text-[54px] font-bold text-white mb-4 leading-tight tracking-tight">Adinkes Training Center</h1>
-                          <p className="text-xl text-blue-100 mb-12 font-medium">Lembaga Pelatihan dan Edukasi Medis Terpercaya di Indonesia</p>
+                          <h1 className="text-4xl md:text-5xl lg:text-[54px] font-bold text-white mb-4 leading-tight tracking-tight">Layanan Cepat dan Tepat</h1>
+                          <p className="text-xl text-blue-100 mb-12 font-medium">Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia</p>
                           <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-10">
                             {heroActions.map(action => (
                               <div key={action.id} className="flex flex-col items-center cursor-pointer group" onClick={action.action}>
@@ -323,7 +353,7 @@
                         </div>
                         <div className="w-full md:w-2/5 flex justify-center md:justify-end relative">
                           <img 
-                            src="https://i.ibb.co.com/Jj4MXX6Q/Bantu-para-penghafal-quran.png?auto=format&fit=crop&w=700&q=80" 
+                            src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=700&q=80" 
                             alt="Tenaga Medis" 
                             className="h-[350px] md:h-[450px] object-cover object-top filter brightness-105 rounded-t-[100px] md:rounded-none md:rounded-tl-[100px]"
                             style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%)' }}
@@ -353,7 +383,7 @@
                             <div className="col-span-full text-center py-8 text-slate-400">Belum ada berita.</div>
                           ) : (
                             news.slice(0, 4).map((item) => (
-                              <div key={item.id} onClick={() => setActiveTab('Berita')} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 group cursor-pointer flex flex-col">
+                              <div key={item.id} onClick={() => openArticle(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 group cursor-pointer flex flex-col">
                                 <div className="h-44 overflow-hidden relative">
                                   <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                 </div>
@@ -364,7 +394,9 @@
                                   </div>
                                   <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{item.title}</h3>
                                   <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                                    <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span></span>
+                                    <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
+                                      Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                                    </span>
                                     <button onClick={(e) => { e.stopPropagation(); openShareModal(item.title, 'news'); }} className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors" title="Bagikan Artikel">
                                       <span className="material-symbols-outlined text-[18px]">share</span>
                                     </button>
@@ -397,6 +429,12 @@
                       <h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Lembaga</h2>
                       <div className="w-20 h-1 bg-alo-blue mx-auto rounded-full mb-8"></div>
                     </div>
+                    {/* Logo di atas, proporsional */}
+                    {profile.logo_url && (
+                      <div className="flex justify-center mb-6">
+                        <img src={profile.logo_url} alt="Logo Lembaga" className="max-h-32 w-auto object-contain" />
+                      </div>
+                    )}
                     <div className="flex flex-col md:flex-row gap-12 items-center">
                       <div className="w-full md:w-1/2">
                         <img src={profile.banner_url || "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80"} alt="Gedung Lembaga" className="rounded-3xl shadow-xl w-full object-cover h-[400px]" />
@@ -637,7 +675,7 @@
                     <div className="text-center mb-12"><h2 className="text-3xl font-bold text-slate-800">Semua Berita & Artikel</h2></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {news.map((item) => (
-                        <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
+                        <div key={item.id} onClick={() => openArticle(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
                           <div className="h-48 overflow-hidden relative">
                             <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           </div>
@@ -648,7 +686,9 @@
                             </div>
                             <h3 className="text-base font-bold text-slate-800 group-hover:text-alo-blue transition-colors line-clamp-3 mb-4 leading-snug">{item.title}</h3>
                             <div className="mt-auto flex justify-between items-center border-t border-slate-100 pt-3">
-                              <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span></span>
+                              <span className="text-sm text-alo-blue font-semibold flex items-center gap-1 group-hover:text-blue-800">
+                                Baca <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                              </span>
                               <button onClick={(e) => { e.stopPropagation(); openShareModal(item.title, 'news'); }} className="text-slate-400 hover:text-alo-blue p-1.5 -mr-1.5 rounded-full hover:bg-blue-50 transition-colors" title="Bagikan Artikel">
                                 <span className="material-symbols-outlined text-[18px]">share</span>
                               </button>
@@ -661,6 +701,21 @@
                 );
 
               case 'Galeri':
+                if (galleryLoading) {
+                  return (
+                    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+                      <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                      <p className="text-slate-500 mt-4">Memuat galeri...</p>
+                    </div>
+                  );
+                }
+                if (gallery.length === 0) {
+                  return (
+                    <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12 text-center">
+                      <p className="text-slate-500">Belum ada foto di galeri.</p>
+                    </div>
+                  );
+                }
                 return (
                   <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
                     <div className="text-center mb-12">
@@ -668,9 +723,9 @@
                       <p className="text-slate-500">Dokumentasi momen berharga selama proses pelatihan berlangsung.</p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {galleryList.map((img, idx) => (
-                        <div key={idx} className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-slate-200 shadow-sm hover:shadow-xl transition-all">
-                          <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      {gallery.map((item) => (
+                        <div key={item.id} className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-slate-200 shadow-sm hover:shadow-xl transition-all">
+                          <img src={item.img_url} alt="Galeri" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                           <div className="absolute inset-0 bg-alo-blue/0 group-hover:bg-alo-blue/20 transition-colors duration-300 flex items-center justify-center">
                             <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-4xl drop-shadow-lg">zoom_in</span>
                           </div>
@@ -688,11 +743,12 @@
           // --- RENDER UTAMA ---
           return (
             <div className="min-h-screen flex flex-col relative bg-slate-50">
+              {/* NAVIGASI */}
               <nav className="bg-alo-blue sticky top-0 z-40 shadow-md">
                 <div className="max-w-7xl mx-auto px-6">
                   <div className="flex justify-between items-center h-[72px]">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('Beranda')}>
-                      <span className="text-2xl font-bold text-white tracking-tight uppercase">ADINKESTC</span>
+                      <span className="text-2xl font-bold text-white tracking-tight uppercase">MEDIKAEDU</span>
                     </div>
                     <div className="hidden lg:flex flex-1 max-w-md mx-8 relative">
                       <span className="material-symbols-outlined absolute left-3 top-2.5 text-white/70 text-[20px]">search</span>
@@ -745,14 +801,16 @@
                 )}
               </nav>
 
+              {/* MAIN CONTENT */}
               <main className="flex-grow w-full mx-auto" style={{ maxWidth: activeTab === 'Beranda' ? '100%' : '80rem' }}>
                 {renderContent()}
               </main>
 
+              {/* FOOTER */}
               <footer className="bg-[#0f172a] text-slate-300 py-16 mt-auto border-t-[8px] border-alo-blue">
                 <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
                   <div className="col-span-1 md:col-span-1">
-                    <span className="text-2xl font-bold text-white tracking-tight uppercase block mb-4">ADINKESTC</span>
+                    <span className="text-2xl font-bold text-white tracking-tight uppercase block mb-4">MEDIKAEDU</span>
                     <p className="text-slate-400 mb-6 text-sm leading-relaxed">Lembaga pelatihan dan edukasi medis independen terkemuka di Indonesia, mencetak SDM kesehatan yang kompeten dan profesional.</p>
                   </div>
                   <div>
@@ -814,6 +872,7 @@
                 </div>
               </footer>
 
+              {/* WHATSAPP FLOAT */}
               <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-2xl z-40 flex items-center justify-center group transition-transform hover:scale-110">
                 <span className="material-symbols-outlined text-[32px]">chat</span>
                 <span className="absolute right-full mr-4 bg-white text-slate-800 text-sm font-bold py-2 px-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -821,6 +880,7 @@
                 </span>
               </a>
 
+              {/* BOOKING MODAL */}
               {isModalOpen && selectedCourse && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
                   <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
@@ -855,14 +915,14 @@
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Nama Peserta (beserta Gelar)</label>
-                            <input required type="text" className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-alo-blue focus:ring-1 focus:ring-alo-blue" placeholder="Contoh: Dr. Budi Santoso" />
+                            <input required type="text" name="nama" className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-alo-blue focus:ring-1 focus:ring-alo-blue" placeholder="Contoh: Dr. Budi Santoso" />
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Nomor WhatsApp Aktif</label>
-                            <input required type="tel" className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-alo-blue focus:ring-1 focus:ring-alo-blue" placeholder="0812..." />
+                            <input required type="tel" name="wa" className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-alo-blue focus:ring-1 focus:ring-alo-blue" placeholder="0812..." />
                           </div>
-                          <button type="submit" className="w-full mt-4 bg-alo-blue hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg">
-                            Proses Reservasi
+                          <button type="submit" disabled={isSubmitting} className="w-full mt-4 bg-alo-blue hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-50">
+                            {isSubmitting ? 'Memproses...' : 'Proses Reservasi'}
                           </button>
                         </form>
                       )}
@@ -871,6 +931,7 @@
                 </div>
               )}
 
+              {/* SHARE MODAL */}
               {shareModalData.isOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
                   <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in">
@@ -915,6 +976,31 @@
                         ) : (
                           <button onClick={handleCopyLink} className="text-xs font-bold text-alo-blue whitespace-nowrap hover:text-blue-800 transition-colors">Salin</button>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ARTIKEL MODAL */}
+              {articleModal.isOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] flex items-center justify-center p-4 overflow-y-auto">
+                  <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in">
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                      <h3 className="text-xl font-bold text-slate-800">Detail Artikel</h3>
+                      <button onClick={closeArticle} className="text-slate-400 hover:text-red-500 p-1.5 rounded-full transition-colors">
+                        <span className="material-symbols-outlined text-[24px]">close</span>
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-4">
+                      <img src={articleModal.img} alt={articleModal.title} className="w-full h-64 object-cover rounded-2xl" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-alo-blue bg-blue-50 px-3 py-1 rounded-full">{articleModal.category}</span>
+                        <span className="text-sm text-slate-400">{articleModal.date}</span>
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-800">{articleModal.title}</h2>
+                      <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-line">
+                        {articleModal.content}
                       </div>
                     </div>
                   </div>
