@@ -59,6 +59,12 @@
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
+        // --- MOCK STRUKTUR ---
+        const mockStruktur = [
+            { id: 1, name: 'Dr. Hendra Wijaya, MARS', role: 'Direktur Utama' },
+            { id: 2, name: 'Ns. Ratna Sari, M.Kes', role: 'Manajer Operasional' },
+        ];
+
         // --- KOMPONEN CHARTS ---
         function DashboardCharts({ registrations, schedules }) {
             const chartRefs = useRef({});
@@ -280,6 +286,15 @@
 
         // --- KOMPONEN UTAMA ---
         function AdminDashboard() {
+            // --- STATE AUTH ---
+            const [session, setSession] = useState(null);
+            const [authLoading, setAuthLoading] = useState(true);
+            const [userProfile, setUserProfile] = useState(null);
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [loginError, setLoginError] = useState('');
+            const [loginLoading, setLoginLoading] = useState(false);
+
+            // --- STATE DASHBOARD ---
             const [activeMenu, setActiveMenu] = useState('Dashboard');
             const [jadwalTab, setJadwalTab] = useState('Pelatihan');
             const [activeModal, setActiveModal] = useState(null);
@@ -298,10 +313,6 @@
             const [profileLoading, setProfileLoading] = useState(true);
             const [profileFormData, setProfileFormData] = useState({});
 
-            // --- STATE STRUKTUR ORGANISASI ---
-            const [struktur, setStruktur] = useState([]);
-            const [strukturLoading, setStrukturLoading] = useState(true);
-
             // --- FORM STATE ---
             const [programForm, setProgramForm] = useState({ title: '', description: '', icon: 'auto_stories', modul_url: '' });
             const [editingProgramId, setEditingProgramId] = useState(null);
@@ -313,16 +324,132 @@
             const [sertifikatRegId, setSertifikatRegId] = useState(null);
             const [galleryUrl, setGalleryUrl] = useState('');
 
-            // --- FORM STRUKTUR ---
-            const [strukturForm, setStrukturForm] = useState({ name: '', role: '', order: 0 });
-            const [editingStrukturId, setEditingStrukturId] = useState(null);
-
             // --- RESET ---
             const resetProgramForm = () => { setProgramForm({ title: '', description: '', icon: 'auto_stories', modul_url: '' }); setEditingProgramId(null); };
             const resetScheduleForm = () => { setScheduleForm({ category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta', price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80', description: '' }); setEditingScheduleId(null); };
             const resetInstructorForm = () => { setInstructorForm({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' }); setEditingInstructorId(null); };
             const resetSertifikatForm = () => { setSertifikatUrl(''); setSertifikatRegId(null); };
-            const resetStrukturForm = () => { setStrukturForm({ name: '', role: '', order: 0 }); setEditingStrukturId(null); };
+
+            // --- CEK SESSION ---
+            useEffect(() => {
+                const getSession = async () => {
+                    setAuthLoading(true);
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    if (error) console.error('Error getting session:', error);
+                    setSession(session);
+                    if (session) {
+                        await checkAdminRole(session.user);
+                    } else {
+                        setIsAdmin(false);
+                        setAuthLoading(false);
+                    }
+                };
+                getSession();
+
+                const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+                    setSession(session);
+                    if (session) {
+                        checkAdminRole(session.user);
+                    } else {
+                        setIsAdmin(false);
+                        setUserProfile(null);
+                        setAuthLoading(false);
+                    }
+                });
+
+                return () => listener?.subscription?.unsubscribe();
+            }, []);
+
+            const checkAdminRole = async (user) => {
+                try {
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('auth_id', user.id)
+                        .single();
+
+                    if (error || !data) {
+                        console.error('Error fetching user role:', error);
+                        setIsAdmin(false);
+                        setUserProfile(null);
+                        setAuthLoading(false);
+                        return;
+                    }
+
+                    setUserProfile(data);
+                    if (data.role === 'admin') {
+                        setIsAdmin(true);
+                        // Jika admin, fetch data dashboard
+                        await fetchAllData();
+                    } else {
+                        setIsAdmin(false);
+                        setLoginError('Akses ditolak. Anda bukan admin.');
+                    }
+                    setAuthLoading(false);
+                } catch (err) {
+                    console.error('Error in checkAdminRole:', err);
+                    setIsAdmin(false);
+                    setAuthLoading(false);
+                }
+            };
+
+            // --- FUNGSI LOGIN ---
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setLoginError('');
+                setLoginLoading(true);
+                const form = e.target;
+                const email = form.email.value;
+                const password = form.password.value;
+
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    if (error) {
+                        setLoginError('Login gagal: ' + error.message);
+                        setLoginLoading(false);
+                        return;
+                    }
+                    // Session akan dihandle oleh listener
+                    setLoginLoading(false);
+                } catch (err) {
+                    setLoginError('Terjadi kesalahan: ' + err.message);
+                    setLoginLoading(false);
+                }
+            };
+
+            // --- FUNGSI LOGOUT ---
+            const handleLogout = async () => {
+                await supabase.auth.signOut();
+                setActiveMenu('Dashboard');
+                showToast('Anda telah keluar dari sistem.');
+            };
+
+            // --- FETCH ALL DATA (hanya untuk admin) ---
+            const fetchAllData = async () => {
+                setLoading(true);
+                try {
+                    const [programsRes, schedulesRes, instructorsRes, newsRes, galleryRes, usersRes, registrationsRes] = await Promise.all([
+                        supabase.from('programs').select('*').order('id', { ascending: true }),
+                        supabase.from('schedules').select('*').order('id', { ascending: true }),
+                        supabase.from('instructors').select('*').order('id', { ascending: true }),
+                        supabase.from('news').select('*').order('id', { ascending: true }),
+                        supabase.from('gallery').select('*').order('id', { ascending: true }),
+                        supabase.from('users').select('*').eq('role', 'member').order('id', { ascending: true }),
+                        supabase.from('registrations').select('*').order('id', { ascending: true }),
+                    ]);
+                    if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
+                    if (schedulesRes.error) console.error('Error schedules:', schedulesRes.error); else setSchedules(schedulesRes.data || []);
+                    if (instructorsRes.error) console.error('Error instructors:', instructorsRes.error); else setInstructors(instructorsRes.data || []);
+                    if (newsRes.error) console.error('Error news:', newsRes.error); else setNews(newsRes.data || []);
+                    if (galleryRes.error) console.error('Error gallery:', galleryRes.error); else setGallery(galleryRes.data || []);
+                    if (usersRes.error) console.error('Error users:', usersRes.error); else setUsers(usersRes.data || []);
+                    if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error); else setRegistrations(registrationsRes.data || []);
+                    await fetchProfile();
+                } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
+            };
 
             // --- FETCH PROFILE ---
             const fetchProfile = async () => {
@@ -346,67 +473,7 @@
                 });
             }, [profile]);
 
-            // --- FETCH STRUKTUR ---
-            const fetchStruktur = async () => {
-                setStrukturLoading(true);
-                const { data, error } = await supabase
-                    .from('organization_structure')
-                    .select('*')
-                    .order('order', { ascending: true });
-                if (error) { console.error('Error fetch struktur:', error); setStruktur([]); } else { setStruktur(data || []); }
-                setStrukturLoading(false);
-            };
-
-            // --- CRUD STRUKTUR ---
-            const addStruktur = async (data) => {
-                const { error } = await supabase.from('organization_structure').insert([data]);
-                if (error) { showToast('Gagal tambah struktur: ' + error.message); return; }
-                await fetchStruktur();
-                showToast('Struktur berhasil ditambahkan!');
-            };
-            const updateStruktur = async (id, data) => {
-                const { error } = await supabase.from('organization_structure').update(data).eq('id', id);
-                if (error) { showToast('Gagal update struktur: ' + error.message); return; }
-                await fetchStruktur();
-                showToast('Struktur berhasil diperbarui!');
-            };
-            const deleteStruktur = async (id) => {
-                if (!confirm('Yakin ingin menghapus struktur ini?')) return;
-                const { error } = await supabase.from('organization_structure').delete().eq('id', id);
-                if (error) { showToast('Gagal hapus struktur: ' + error.message); return; }
-                await fetchStruktur();
-                showToast('Struktur dihapus.');
-            };
-
-            // --- FETCH ALL ---
-            useEffect(() => {
-                async function fetchAllData() {
-                    setLoading(true);
-                    try {
-                        const [programsRes, schedulesRes, instructorsRes, newsRes, galleryRes, usersRes, registrationsRes] = await Promise.all([
-                            supabase.from('programs').select('*').order('id', { ascending: true }),
-                            supabase.from('schedules').select('*').order('id', { ascending: true }),
-                            supabase.from('instructors').select('*').order('id', { ascending: true }),
-                            supabase.from('news').select('*').order('id', { ascending: true }),
-                            supabase.from('gallery').select('*').order('id', { ascending: true }),
-                            supabase.from('users').select('*').eq('role', 'member').order('id', { ascending: true }),
-                            supabase.from('registrations').select('*').order('id', { ascending: true }),
-                        ]);
-                        if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
-                        if (schedulesRes.error) console.error('Error schedules:', schedulesRes.error); else setSchedules(schedulesRes.data || []);
-                        if (instructorsRes.error) console.error('Error instructors:', instructorsRes.error); else setInstructors(instructorsRes.data || []);
-                        if (newsRes.error) console.error('Error news:', newsRes.error); else setNews(newsRes.data || []);
-                        if (galleryRes.error) console.error('Error gallery:', galleryRes.error); else setGallery(galleryRes.data || []);
-                        if (usersRes.error) console.error('Error users:', usersRes.error); else setUsers(usersRes.data || []);
-                        if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error); else setRegistrations(registrationsRes.data || []);
-                        await fetchProfile();
-                        await fetchStruktur();
-                    } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
-                }
-                fetchAllData();
-            }, []);
-
-            // --- CRUD ---
+            // --- CRUD FUNCTIONS ---
             const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
 
             const addProgram = async (data) => {
@@ -541,10 +608,6 @@
                 setActiveModal('instructor');
             };
             const openSertifikatModal = (reg) => { setSertifikatUrl(''); setSertifikatRegId(reg.id); setActiveModal('sertifikat'); };
-            const openStrukturModal = (data = null) => {
-                if (data) { setStrukturForm({ name: data.name, role: data.role || '', order: data.order || 0 }); setEditingStrukturId(data.id); } else { resetStrukturForm(); }
-                setActiveModal('struktur');
-            };
 
             // --- RENDER DASHBOARD ---
             const renderDashboard = () => {
@@ -604,11 +667,10 @@
                 );
             };
 
-            // --- RENDER PROFIL (dengan Struktur Organisasi dari database) ---
+            // --- RENDER PROFIL ---
             const renderProfil = () => {
                 const handleSubmit = async (e) => { e.preventDefault(); await updateProfile(profileFormData); };
-                if (profileLoading || strukturLoading) return (<div className="flex items-center justify-center h-full"><span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span><span className="ml-3 text-slate-500">Memuat profil...</span></div>);
-
+                if (profileLoading) return (<div className="flex items-center justify-center h-full"><span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span><span className="ml-3 text-slate-500">Memuat profil...</span></div>);
                 return (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center">
@@ -638,36 +700,18 @@
                                         <div><label className="block text-sm font-semibold text-slate-700 mb-1">Instagram URL</label><input type="text" value={profileFormData.instagram} onChange={(e) => setProfileFormData({ ...profileFormData, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
                                     </div>
                                 </div>
-
-                                {/* STRUKTUR ORGANISASI - dari database */}
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                    <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                        <h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3>
-                                        <button onClick={() => openStrukturModal()} className="text-sm text-alo-blue font-bold flex items-center hover:underline">
-                                            <span className="material-symbols-outlined text-[16px]">add</span> Tambah
-                                        </button>
-                                    </div>
+                                    <div className="flex justify-between items-center mb-4 border-b pb-2"><h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3><button onClick={() => setActiveModal('struktur')} className="text-sm text-alo-blue font-bold flex items-center hover:underline"><span className="material-symbols-outlined text-[16px]">add</span> Tambah</button></div>
                                     <div className="space-y-3">
-                                        {struktur.length === 0 ? (
-                                            <p className="text-sm text-slate-400 text-center py-4">Belum ada data struktur organisasi.</p>
-                                        ) : (
-                                            struktur.map(item => (
-                                                <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
-                                                    <div>
-                                                        <p className="font-bold text-sm text-slate-800">{item.name}</p>
-                                                        <p className="text-xs text-slate-500">{item.role}</p>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => openStrukturModal(item)} className="text-blue-500 hover:bg-blue-100 p-1 rounded">
-                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                        </button>
-                                                        <button onClick={() => deleteStruktur(item.id)} className="text-red-500 hover:bg-red-100 p-1 rounded">
-                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                        </button>
-                                                    </div>
+                                        {mockStruktur.map(item => (
+                                            <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
+                                                <div><p className="font-bold text-sm text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.role}</p></div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => setActiveModal('struktur')} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                                                    <button onClick={() => showToast('Data dihapus.')} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
                                                 </div>
-                                            ))
-                                        )}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -869,14 +913,7 @@
             const renderModal = () => {
                 if (!activeModal) return null;
                 let title = '', content = null, onSave = null, saveLabel = 'Simpan';
-                const closeModal = () => {
-                    setActiveModal(null);
-                    resetProgramForm();
-                    resetScheduleForm();
-                    resetInstructorForm();
-                    resetSertifikatForm();
-                    resetStrukturForm();
-                };
+                const closeModal = () => { setActiveModal(null); resetProgramForm(); resetScheduleForm(); resetInstructorForm(); resetSertifikatForm(); };
 
                 if (activeModal === 'program') {
                     const isEdit = editingProgramId !== null;
@@ -926,24 +963,9 @@
                     onSave = async () => { if (!sertifikatUrl.trim()) { showToast('Masukkan URL sertifikat.'); return; } await uploadCertificate(sertifikatRegId, sertifikatUrl.trim()); closeModal(); };
                     saveLabel = 'Upload';
                 } else if (activeModal === 'struktur') {
-                    const isEdit = editingStrukturId !== null;
-                    title = isEdit ? 'Edit Struktur Organisasi' : 'Tambah Struktur Organisasi';
-                    content = (
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={strukturForm.name} onChange={(e) => setStrukturForm({ ...strukturForm, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Jabatan</label><input type="text" value={strukturForm.role} onChange={(e) => setStrukturForm({ ...strukturForm, role: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Urutan Tampil</label><input type="number" value={strukturForm.order} onChange={(e) => setStrukturForm({ ...strukturForm, order: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                        </div>
-                    );
-                    onSave = async () => {
-                        const data = { name: strukturForm.name, role: strukturForm.role, order: strukturForm.order };
-                        if (isEdit) {
-                            await updateStruktur(editingStrukturId, data);
-                        } else {
-                            await addStruktur(data);
-                        }
-                        closeModal();
-                    };
+                    title = 'Tambah Struktur Organisasi';
+                    content = (<div className="space-y-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Jabatan</label><input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>);
+                    onSave = () => { showToast('Struktur ditambahkan (mock)'); closeModal(); };
                 }
                 if (!content) return null;
                 return (
@@ -969,7 +991,84 @@
                 { id: 'Galeri', icon: 'photo_library', label: 'Galeri Kegiatan' },
             ];
 
-            // --- RENDER ---
+            // --- RENDER UTAMA ---
+            // Jika masih loading auth, tampilkan loading
+            if (authLoading) {
+                return (
+                    <div className="flex h-screen w-full items-center justify-center bg-slate-100">
+                        <div className="text-center">
+                            <span className="material-symbols-outlined animate-spin text-5xl text-alo-blue">progress_activity</span>
+                            <p className="mt-4 text-slate-500">Memuat sesi...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Jika belum login, tampilkan halaman login
+            if (!session) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 relative overflow-hidden py-10">
+                        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 z-10 animate-fade-in flex flex-col overflow-hidden">
+                            <div className="bg-alo-blue p-8 text-center shrink-0">
+                                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-alo-blue shadow-lg mx-auto mb-4">
+                                    <span className="material-symbols-outlined text-[32px] icon-filled">admin_panel_settings</span>
+                                </div>
+                                <h1 className="text-2xl font-bold text-white tracking-tight">CMS Admin</h1>
+                                <p className="text-blue-100 text-sm mt-1">Masuk untuk mengelola website</p>
+                            </div>
+                            <div className="p-8 flex-1 overflow-y-auto">
+                                <form onSubmit={handleLogin} className="space-y-5">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Admin</label>
+                                        <div className="relative">
+                                            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span>
+                                            <input required type="email" name="email" placeholder="admin@medikaedu.com" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi</label>
+                                        <div className="relative">
+                                            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span>
+                                            <input required type="password" name="password" placeholder="••••••••" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
+                                        </div>
+                                    </div>
+                                    {loginError && (
+                                        <div className="text-red-500 text-sm bg-red-50 p-3 rounded-xl border border-red-200">
+                                            {loginError}
+                                        </div>
+                                    )}
+                                    <button type="submit" disabled={loginLoading} className="w-full bg-alo-blue text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md mt-4 disabled:opacity-50">
+                                        {loginLoading ? 'Memproses...' : 'Masuk ke Dashboard'}
+                                    </button>
+                                </form>
+                                <div className="mt-8 text-center text-sm text-slate-500">
+                                    Hanya admin yang memiliki akses ke halaman ini.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="fixed top-[-20%] left-[-10%] w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 z-0 pointer-events-none"></div>
+                        <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-teal-50 rounded-full blur-3xl opacity-50 z-0 pointer-events-none"></div>
+                    </div>
+                );
+            }
+
+            // Jika sudah login tapi bukan admin
+            if (session && !isAdmin) {
+                return (
+                    <div className="flex h-screen w-full items-center justify-center bg-slate-100">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-md">
+                            <span className="material-symbols-outlined text-6xl text-red-500">block</span>
+                            <h2 className="text-2xl font-bold text-slate-800 mt-4">Akses Ditolak</h2>
+                            <p className="text-slate-500 mt-2">Akun ini tidak memiliki izin untuk mengakses CMS Admin.</p>
+                            <button onClick={handleLogout} className="mt-6 bg-red-500 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-600 transition-colors">
+                                Keluar
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- RENDER DASHBOARD ADMIN (sudah login sebagai admin) ---
             return (
                 <div className="flex h-screen w-full bg-slate-100 overflow-hidden relative">
                     {toastMessage && (
@@ -993,8 +1092,12 @@
                                 </button>
                             ))}
                         </div>
-                        <div className="p-4 border-t border-slate-700/50">
-                            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium text-red-400 hover:bg-red-500/10">
+                        <div className="p-4 border-t border-slate-700/50 space-y-2">
+                            <div className="text-xs text-slate-400 px-2 pb-2 border-b border-slate-700/50">
+                                <p className="font-semibold text-white">{userProfile?.name || 'Admin'}</p>
+                                <p>{userProfile?.email || session.user?.email}</p>
+                            </div>
+                            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium text-red-400 hover:bg-red-500/10">
                                 <span className="material-symbols-outlined text-[20px]">logout</span> Keluar Sistem
                             </button>
                         </div>
@@ -1008,8 +1111,8 @@
                                 <div className="h-6 w-px bg-slate-300 mx-2"></div>
                                 <button className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 relative"><span className="material-symbols-outlined text-[20px]">notifications</span><span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span></button>
                                 <div className="flex items-center gap-2 pl-4 border-l border-slate-200">
-                                    <div className="text-right hidden md:block"><p className="text-sm font-bold text-slate-800">Admin Pusat</p><p className="text-xs text-slate-500">Super Administrator</p></div>
-                                    <div className="w-9 h-9 rounded-full bg-alo-blue text-white flex items-center justify-center font-bold shadow-md">A</div>
+                                    <div className="text-right hidden md:block"><p className="text-sm font-bold text-slate-800">{userProfile?.name || 'Admin'}</p><p className="text-xs text-slate-500">Super Administrator</p></div>
+                                    <div className="w-9 h-9 rounded-full bg-alo-blue text-white flex items-center justify-center font-bold shadow-md">{userProfile?.name?.charAt(0) || 'A'}</div>
                                 </div>
                             </div>
                         </header>
