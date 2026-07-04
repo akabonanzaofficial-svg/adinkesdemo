@@ -26,7 +26,6 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        /* Quill Editor Styles */
         .ql-editor { min-height: 300px; }
         .ql-toolbar { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
         .ql-container { border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
@@ -66,6 +65,80 @@
             { id: 2, name: 'Ns. Ratna Sari, M.Kes', role: 'Manajer Operasional' },
         ];
 
+        // --- KOMPONEN CHARTS (dipisahkan agar tidak melanggar hooks) ---
+        function DashboardCharts({ registrations, schedules }) {
+            const chartRefs = useRef({});
+
+            useEffect(() => {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const currentYear = new Date().getFullYear();
+                const regPerMonth = Array(12).fill(0);
+                const revPerMonth = Array(12).fill(0);
+
+                registrations.forEach(reg => {
+                    const date = new Date(reg.created_at);
+                    if (date.getFullYear() === currentYear) {
+                        const month = date.getMonth();
+                        regPerMonth[month]++;
+                        const schedule = schedules.find(s => s.id === reg.schedule_id);
+                        if (schedule && schedule.price) {
+                            const priceStr = schedule.price.replace(/[^0-9]/g, '');
+                            if (priceStr) revPerMonth[month] += parseInt(priceStr);
+                        }
+                    }
+                });
+
+                // Hancurkan chart lama jika ada
+                if (chartRefs.current.reg) { chartRefs.current.reg.destroy(); }
+                if (chartRefs.current.rev) { chartRefs.current.rev.destroy(); }
+
+                const ctxReg = document.getElementById('registrationsChart');
+                const ctxRev = document.getElementById('revenueChart');
+
+                if (ctxReg) {
+                    chartRefs.current.reg = new Chart(ctxReg, {
+                        type: 'bar',
+                        data: {
+                            labels: monthNames,
+                            datasets: [{
+                                label: 'Registrasi',
+                                data: regPerMonth,
+                                backgroundColor: 'rgba(30, 115, 190, 0.6)',
+                                borderColor: '#1E73BE',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: { responsive: true, plugins: { legend: { display: false } } }
+                    });
+                }
+                if (ctxRev) {
+                    chartRefs.current.rev = new Chart(ctxRev, {
+                        type: 'line',
+                        data: {
+                            labels: monthNames,
+                            datasets: [{
+                                label: 'Pendapatan (Rp)',
+                                data: revPerMonth,
+                                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                                borderColor: '#22c55e',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: { responsive: true, plugins: { legend: { display: false } } }
+                    });
+                }
+
+                return () => {
+                    if (chartRefs.current.reg) chartRefs.current.reg.destroy();
+                    if (chartRefs.current.rev) chartRefs.current.rev.destroy();
+                };
+            }, [registrations, schedules]);
+
+            return null;
+        }
+
         // --- KOMPONEN UTAMA ---
         function AdminDashboard() {
             const [activeMenu, setActiveMenu] = useState('Dashboard');
@@ -104,10 +177,9 @@
             const quillRef = useRef(null);
             const containerRef = useRef(null);
 
-            // --- GALLERY URL ---
             const [galleryUrl, setGalleryUrl] = useState('');
 
-            // --- RESET FUNCTIONS ---
+            // --- RESET ---
             const resetProgramForm = () => { setProgramForm({ title: '', description: '', icon: 'auto_stories', modul_url: '' }); setEditingProgramId(null); };
             const resetScheduleForm = () => { setScheduleForm({ category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta', price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80', description: '' }); setEditingScheduleId(null); };
             const resetInstructorForm = () => { setInstructorForm({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' }); setEditingInstructorId(null); };
@@ -135,7 +207,7 @@
                 });
             }, [profile]);
 
-            // --- FETCH ALL DATA ---
+            // --- FETCH ALL ---
             useEffect(() => {
                 async function fetchAllData() {
                     setLoading(true);
@@ -162,7 +234,7 @@
                 fetchAllData();
             }, []);
 
-            // --- CRUD FUNCTIONS ---
+            // --- CRUD ---
             const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
 
             const addProgram = async (data) => {
@@ -298,86 +370,21 @@
             };
             const openSertifikatModal = (reg) => { setSertifikatUrl(''); setSertifikatRegId(reg.id); setActiveModal('sertifikat'); };
 
-            // --- RENDER DASHBOARD with Charts ---
+            // --- RENDER DASHBOARD ---
             const renderDashboard = () => {
                 const totalPrograms = programs.length;
                 const totalSchedules = schedules.length;
                 const totalInstructors = instructors.length;
                 const totalUsers = users.length;
                 const pendingRegistrations = registrations.filter(r => r.status_pembayaran === 'Menunggu Cek' || r.status_pembayaran === 'Menunggu Pembayaran').length;
-                const totalRegistrations = registrations.length;
-
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-                const currentYear = new Date().getFullYear();
-                const registrationsPerMonth = Array(12).fill(0);
                 let totalRevenue = 0;
-
                 registrations.forEach(reg => {
-                    const date = new Date(reg.created_at);
-                    if (date.getFullYear() === currentYear) {
-                        const month = date.getMonth();
-                        registrationsPerMonth[month]++;
-                        const schedule = schedules.find(s => s.id === reg.schedule_id);
-                        if (schedule && schedule.price) {
-                            const priceStr = schedule.price.replace(/[^0-9]/g, '');
-                            if (priceStr) totalRevenue += parseInt(priceStr);
-                        }
+                    const schedule = schedules.find(s => s.id === reg.schedule_id);
+                    if (schedule && schedule.price) {
+                        const priceStr = schedule.price.replace(/[^0-9]/g, '');
+                        if (priceStr) totalRevenue += parseInt(priceStr);
                     }
                 });
-
-                const revenuePerMonth = Array(12).fill(0);
-                registrations.forEach(reg => {
-                    const date = new Date(reg.created_at);
-                    if (date.getFullYear() === currentYear) {
-                        const month = date.getMonth();
-                        const schedule = schedules.find(s => s.id === reg.schedule_id);
-                        if (schedule && schedule.price) {
-                            const priceStr = schedule.price.replace(/[^0-9]/g, '');
-                            if (priceStr) revenuePerMonth[month] += parseInt(priceStr);
-                        }
-                    }
-                });
-
-                useEffect(() => {
-                    if (activeMenu === 'Dashboard') {
-                        const ctxReg = document.getElementById('registrationsChart');
-                        const ctxRev = document.getElementById('revenueChart');
-                        if (ctxReg) {
-                            new Chart(ctxReg, {
-                                type: 'bar',
-                                data: {
-                                    labels: monthNames,
-                                    datasets: [{
-                                        label: 'Registrasi',
-                                        data: registrationsPerMonth,
-                                        backgroundColor: 'rgba(30, 115, 190, 0.6)',
-                                        borderColor: '#1E73BE',
-                                        borderWidth: 1
-                                    }]
-                                },
-                                options: { responsive: true, plugins: { legend: { display: false } } }
-                            });
-                        }
-                        if (ctxRev) {
-                            new Chart(ctxRev, {
-                                type: 'line',
-                                data: {
-                                    labels: monthNames,
-                                    datasets: [{
-                                        label: 'Pendapatan (Rp)',
-                                        data: revenuePerMonth,
-                                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                                        borderColor: '#22c55e',
-                                        borderWidth: 2,
-                                        fill: true,
-                                        tension: 0.3
-                                    }]
-                                },
-                                options: { responsive: true, plugins: { legend: { display: false } } }
-                            });
-                        }
-                    }
-                }, [activeMenu, registrations, schedules]);
 
                 return (
                     <div className="space-y-6 animate-fade-in">
@@ -415,6 +422,9 @@
                                 <canvas id="revenueChart" height="200"></canvas>
                             </div>
                         </div>
+
+                        {/* Komponen chart dipanggil di sini agar tidak melanggar hooks */}
+                        <DashboardCharts registrations={registrations} schedules={schedules} />
                     </div>
                 );
             };
@@ -493,7 +503,7 @@
                 </div>
             );
 
-            // --- RENDER JADWAL (diperbaiki) ---
+            // --- RENDER JADWAL ---
             const renderJadwal = () => {
                 const filtered = schedules.filter(s => s.category === jadwalTab);
                 return (
@@ -627,7 +637,6 @@
 
             // --- RENDER BERITA dengan Quill ---
             const renderBerita = () => {
-                // Inisialisasi Quill setelah komponen mount
                 useEffect(() => {
                     if (containerRef.current && !quillRef.current) {
                         quillRef.current = new Quill(containerRef.current, {
@@ -654,7 +663,6 @@
                     };
                 }, [activeMenu]);
 
-                // Update Quill content when editingNewsId changes
                 useEffect(() => {
                     if (quillRef.current && editingNewsId) {
                         const item = news.find(n => n.id === editingNewsId);
