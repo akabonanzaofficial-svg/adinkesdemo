@@ -437,7 +437,7 @@
                         supabase.from('instructors').select('*').order('id', { ascending: true }),
                         supabase.from('news').select('*').order('id', { ascending: true }),
                         supabase.from('gallery').select('*').order('id', { ascending: true }),
-                        supabase.from('users').select('*').eq('role', 'member').order('id', { ascending: true }),
+                        supabase.from('users').select('*').order('id', { ascending: true }),
                         supabase.from('registrations').select('*').order('id', { ascending: true }),
                     ]);
                     if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
