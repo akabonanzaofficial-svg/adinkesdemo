@@ -31,21 +31,12 @@
         .ql-container { border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
     </style>
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-    <!-- Quill Editor -->
     <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-
-    <!-- Babel untuk JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased overflow-hidden">
@@ -54,15 +45,12 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- SUPABASE ---
         const supabaseUrl = 'https://ciigcaudmesmtgznyoga.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        // --- KOMPONEN CHARTS ---
         function DashboardCharts({ registrations, schedules }) {
             const chartRefs = useRef({});
-
             useEffect(() => {
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 const currentYear = new Date().getFullYear();
@@ -82,8 +70,8 @@
                     }
                 });
 
-                if (chartRefs.current.reg) { chartRefs.current.reg.destroy(); }
-                if (chartRefs.current.rev) { chartRefs.current.rev.destroy(); }
+                if (chartRefs.current.reg) chartRefs.current.reg.destroy();
+                if (chartRefs.current.rev) chartRefs.current.rev.destroy();
 
                 const ctxReg = document.getElementById('registrationsChart');
                 const ctxRev = document.getElementById('revenueChart');
@@ -91,48 +79,22 @@
                 if (ctxReg) {
                     chartRefs.current.reg = new Chart(ctxReg, {
                         type: 'bar',
-                        data: {
-                            labels: monthNames,
-                            datasets: [{
-                                label: 'Registrasi',
-                                data: regPerMonth,
-                                backgroundColor: 'rgba(30, 115, 190, 0.6)',
-                                borderColor: '#1E73BE',
-                                borderWidth: 1
-                            }]
-                        },
+                        data: { labels: monthNames, datasets: [{ label: 'Registrasi', data: regPerMonth, backgroundColor: 'rgba(30,115,190,0.6)', borderColor: '#1E73BE', borderWidth: 1 }] },
                         options: { responsive: true, plugins: { legend: { display: false } } }
                     });
                 }
                 if (ctxRev) {
                     chartRefs.current.rev = new Chart(ctxRev, {
                         type: 'line',
-                        data: {
-                            labels: monthNames,
-                            datasets: [{
-                                label: 'Pendapatan (Rp)',
-                                data: revPerMonth,
-                                backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                                borderColor: '#22c55e',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        },
+                        data: { labels: monthNames, datasets: [{ label: 'Pendapatan (Rp)', data: revPerMonth, backgroundColor: 'rgba(34,197,94,0.2)', borderColor: '#22c55e', borderWidth: 2, fill: true, tension: 0.3 }] },
                         options: { responsive: true, plugins: { legend: { display: false } } }
                     });
                 }
-
-                return () => {
-                    if (chartRefs.current.reg) chartRefs.current.reg.destroy();
-                    if (chartRefs.current.rev) chartRefs.current.rev.destroy();
-                };
+                return () => { if (chartRefs.current.reg) chartRefs.current.reg.destroy(); if (chartRefs.current.rev) chartRefs.current.rev.destroy(); };
             }, [registrations, schedules]);
-
             return null;
         }
 
-        // --- KOMPONEN EDITOR BERITA ---
         function BeritaEditor({ news, addNews, updateNews, deleteNews, showToast }) {
             const [editorTitle, setEditorTitle] = useState('');
             const [editorContent, setEditorContent] = useState('');
@@ -146,25 +108,11 @@
                     quillRef.current = new Quill(containerRef.current, {
                         theme: 'snow',
                         placeholder: 'Tulis konten artikel di sini...',
-                        modules: {
-                            toolbar: [
-                                [{ header: [1, 2, 3, false] }],
-                                ['bold', 'italic', 'underline', 'strike'],
-                                [{ list: 'ordered' }, { list: 'bullet' }],
-                                ['link', 'image'],
-                                ['clean']
-                            ]
-                        }
+                        modules: { toolbar: [[{ header: [1,2,3,false] }], ['bold','italic','underline','strike'], [{ list: 'ordered' }, { list: 'bullet' }], ['link','image'], ['clean']] }
                     });
-                    quillRef.current.on('text-change', () => {
-                        setEditorContent(quillRef.current.root.innerHTML);
-                    });
+                    quillRef.current.on('text-change', () => setEditorContent(quillRef.current.root.innerHTML));
                 }
-                return () => {
-                    if (quillRef.current) {
-                        quillRef.current = null;
-                    }
-                };
+                return () => { if (quillRef.current) quillRef.current = null; };
             }, []);
 
             useEffect(() => {
@@ -199,9 +147,7 @@
                 setEditorTitle('');
                 setEditorContent('');
                 setEditorCategory('Berita Lembaga');
-                if (quillRef.current) {
-                    quillRef.current.root.innerHTML = '';
-                }
+                if (quillRef.current) quillRef.current.root.innerHTML = '';
             };
 
             const loadNewsToEditor = (item) => {
@@ -209,9 +155,7 @@
                 setEditorContent(item.content || '');
                 setEditorCategory(item.category || 'Berita Lembaga');
                 setEditingNewsId(item.id);
-                if (quillRef.current) {
-                    quillRef.current.root.innerHTML = item.content || '';
-                }
+                if (quillRef.current) quillRef.current.root.innerHTML = item.content || '';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
@@ -219,10 +163,7 @@
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col shrink-0">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-800">Editor Berita / Artikel</h2>
-                                <p className="text-slate-500 text-xs">Tulis atau edit konten untuk dipublikasikan.</p>
-                            </div>
+                            <div><h2 className="text-lg font-bold text-slate-800">Editor Berita / Artikel</h2><p className="text-slate-500 text-xs">Tulis atau edit konten untuk dipublikasikan.</p></div>
                             <div className="flex gap-3">
                                 <button onClick={handlePublish} className="bg-alo-blue text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
                                     <span className="material-symbols-outlined text-[18px]">{editingNewsId ? 'edit' : 'publish'}</span> {editingNewsId ? 'Update' : 'Publikasikan'}
@@ -278,9 +219,8 @@
             );
         }
 
-        // --- KOMPONEN UTAMA ---
         function AdminDashboard() {
-            // --- AUTH STATE ---
+            // Auth
             const [session, setSession] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
             const [userProfile, setUserProfile] = useState(null);
@@ -288,28 +228,27 @@
             const [loginError, setLoginError] = useState('');
             const [loginLoading, setLoginLoading] = useState(false);
 
-            // --- UI STATE ---
+            // UI
             const [activeMenu, setActiveMenu] = useState('Dashboard');
             const [jadwalTab, setJadwalTab] = useState('Pelatihan');
             const [activeModal, setActiveModal] = useState(null);
             const [toastMessage, setToastMessage] = useState('');
             const [loading, setLoading] = useState(true);
 
-            // --- DATA STATE ---
+            // Data
             const [programs, setPrograms] = useState([]);
             const [schedules, setSchedules] = useState([]);
             const [instructors, setInstructors] = useState([]);
             const [news, setNews] = useState([]);
             const [gallery, setGallery] = useState([]);
             const [registrations, setRegistrations] = useState([]);
-            // Data profil dan loading
             const [profile, setProfile] = useState({});
-            const [profileLoading, setProfileLoading] = useState(false); // <-- SET FALSE AWAL
+            const [profileLoading, setProfileLoading] = useState(true);
             const [profileFormData, setProfileFormData] = useState({});
             const [struktur, setStruktur] = useState([]);
             const [strukturLoading, setStrukturLoading] = useState(true);
 
-            // --- FORM STATE ---
+            // Forms
             const [programForm, setProgramForm] = useState({ title: '', description: '', icon: 'auto_stories', modul_url: '' });
             const [editingProgramId, setEditingProgramId] = useState(null);
             const [scheduleForm, setScheduleForm] = useState({ category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta', price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80', description: '' });
@@ -320,18 +259,16 @@
             const [sertifikatRegId, setSertifikatRegId] = useState(null);
             const [galleryUrl, setGalleryUrl] = useState('');
 
-            // --- STRUKTUR FORM STATE ---
             const [strukturForm, setStrukturForm] = useState({ name: '', role: '', type: 'Manajerial', urutan: 0 });
             const [editingStrukturId, setEditingStrukturId] = useState(null);
 
-            // --- RESET ---
             const resetProgramForm = () => { setProgramForm({ title: '', description: '', icon: 'auto_stories', modul_url: '' }); setEditingProgramId(null); };
             const resetScheduleForm = () => { setScheduleForm({ category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta', price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80', description: '' }); setEditingScheduleId(null); };
             const resetInstructorForm = () => { setInstructorForm({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' }); setEditingInstructorId(null); };
             const resetSertifikatForm = () => { setSertifikatUrl(''); setSertifikatRegId(null); };
             const resetStrukturForm = () => { setStrukturForm({ name: '', role: '', type: 'Manajerial', urutan: 0 }); setEditingStrukturId(null); };
 
-            // --- AUTH ---
+            // Auth
             useEffect(() => {
                 const getSession = async () => {
                     setAuthLoading(true);
@@ -357,7 +294,6 @@
                     setUserProfile(data);
                     if (data.role === 'admin') {
                         setIsAdmin(true);
-                        // Panggil fetchAllData yang akan memanggil fetchProfile
                         await fetchAllData();
                     } else {
                         setIsAdmin(false);
@@ -387,42 +323,7 @@
                 showToast('Anda telah keluar dari sistem.');
             };
 
-            // --- FETCH PROFILE (DIPERBAIKI, PASTI SET FALSE) ---
-            const fetchProfile = async () => {
-                setProfileLoading(true);
-                try {
-                    const { data, error } = await supabase.from('institution_profile').select('*').eq('id', 1).single();
-                    if (error) {
-                        console.error('Error fetch profile:', error);
-                        // Jika data tidak ada, set default (biarkan kosong)
-                        setProfile({
-                            name: '',
-                            tagline: '',
-                            logo_url: '',
-                            banner_url: '',
-                            visi: '',
-                            misi: '',
-                            alamat: '',
-                            telepon: '',
-                            whatsapp: '',
-                            email: '',
-                            instagram: '',
-                            tentang_kami: '',
-                            legalitas: '',
-                            budaya_kerja: '',
-                        });
-                    } else {
-                        setProfile(data || {});
-                    }
-                } catch (err) {
-                    console.error('Error in fetchProfile:', err);
-                    setProfile({});
-                } finally {
-                    setProfileLoading(false); // ← PASTIKAN INI DIJALANKAN
-                }
-            };
-
-            // --- FETCH ALL DATA ---
+            // FETCH ALL DATA (diperbaiki)
             const fetchAllData = async () => {
                 setLoading(true);
                 try {
@@ -433,7 +334,7 @@
                         supabase.from('news').select('*').order('id', { ascending: true }),
                         supabase.from('gallery').select('*').order('id', { ascending: true }),
                         supabase.from('registrations').select('*').order('id', { ascending: true }),
-                        supabase.from('organization_structure').select('*').order('id', { ascending: true }),
+                        supabase.from('organization_structure').select('*').order('urutan', { ascending: true }),
                     ]);
                     if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
                     if (schedulesRes.error) console.error('Error schedules:', schedulesRes.error); else setSchedules(schedulesRes.data || []);
@@ -443,22 +344,60 @@
                     if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error); else setRegistrations(registrationsRes.data || []);
                     if (strukturRes.error) console.error('Error struktur:', strukturRes.error); else setStruktur(strukturRes.data || []);
                     
-                    // 🔥 Panggil fetchProfile untuk mengisi data profil dan mengatur profileLoading
+                    // Ambil profil via fetchProfile agar profileLoading diatur
                     await fetchProfile();
 
                 } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
             };
 
-            // --- FETCH STRUKTUR (untuk update) ---
+            const fetchProfile = async () => {
+                setProfileLoading(true);
+                try {
+                    const { data, error } = await supabase.from('institution_profile').select('*').eq('id', 1).single();
+                    if (error) {
+                        if (error.code === 'PGRST116') {
+                            const defaultProfile = {
+                                id: 1,
+                                name: 'Medika Edukasi Nusantara',
+                                tagline: 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia',
+                                logo_url: '',
+                                banner_url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80',
+                                visi: 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.',
+                                misi: '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...',
+                                alamat: 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345',
+                                telepon: '021 - 888 9999',
+                                whatsapp: '+62 812 3456 7890',
+                                email: 'halo@medikaedu.co.id',
+                                instagram: 'https://instagram.com/medikaedu',
+                                tentang_kami: '',
+                                legalitas: '',
+                                budaya_kerja: '',
+                            };
+                            await supabase.from('institution_profile').insert([defaultProfile]);
+                            setProfile(defaultProfile);
+                        } else {
+                            console.error('Error fetch profile:', error);
+                            setProfile({});
+                        }
+                    } else {
+                        setProfile(data || {});
+                    }
+                } catch (err) {
+                    console.error('Error in fetchProfile:', err);
+                    setProfile({});
+                } finally {
+                    setProfileLoading(false);
+                }
+            };
+
             const fetchStruktur = async () => {
-                const { data, error } = await supabase.from('organization_structure').select('*').order('id', { ascending: true });
+                const { data, error } = await supabase.from('organization_structure').select('*').order('urutan', { ascending: true });
                 if (error) { console.error('Error fetch struktur:', error); setStruktur([]); } else { setStruktur(data || []); }
             };
 
-            // --- CRUD FUNCTIONS ---
+            // CRUD
             const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
 
-            // Program
             const addProgram = async (data) => {
                 const { error } = await supabase.from('programs').insert([data]);
                 if (error) { showToast('Gagal tambah program: ' + error.message); return; }
@@ -481,7 +420,6 @@
                 showToast('Program dihapus.');
             };
 
-            // Schedule
             const addSchedule = async (data) => {
                 const { error } = await supabase.from('schedules').insert([data]);
                 if (error) { showToast('Gagal tambah jadwal: ' + error.message); return; }
@@ -504,7 +442,6 @@
                 showToast('Jadwal dihapus.');
             };
 
-            // Instructor
             const addInstructor = async (data) => {
                 const { error } = await supabase.from('instructors').insert([data]);
                 if (error) { showToast('Gagal tambah pengajar: ' + error.message); return; }
@@ -527,7 +464,6 @@
                 showToast('Pengajar dihapus.');
             };
 
-            // News
             const addNews = async (data) => {
                 const { error } = await supabase.from('news').insert([data]);
                 if (error) { showToast('Gagal tambah berita: ' + error.message); return; }
@@ -550,7 +486,6 @@
                 showToast('Berita dihapus.');
             };
 
-            // Gallery
             const addGallery = async (img_url) => {
                 const { error } = await supabase.from('gallery').insert([{ img_url }]);
                 if (error) { showToast('Gagal upload galeri: ' + error.message); return; }
@@ -566,7 +501,6 @@
                 showToast('Foto dihapus.');
             };
 
-            // Profile
             const updateProfile = async (updatedData) => {
                 let dataToSend = { ...updatedData };
                 if (dataToSend.budaya_kerja) {
@@ -579,7 +513,6 @@
                 return true;
             };
 
-            // Struktur Organisasi
             const addStruktur = async (data) => {
                 const { error } = await supabase.from('organization_structure').insert([data]);
                 if (error) { showToast('Gagal tambah struktur: ' + error.message); return; }
@@ -600,7 +533,6 @@
                 showToast('Struktur dihapus.');
             };
 
-            // Registrations
             const approvePayment = async (regId) => {
                 const { error } = await supabase.from('registrations').update({ status_pembayaran: 'Lunas' }).eq('id', regId);
                 if (error) { showToast('Gagal verifikasi: ' + error.message); return; }
@@ -616,31 +548,6 @@
                 showToast('Sertifikat berhasil diupload!');
             };
 
-            // --- SYNC PROFILE TO FORM ---
-            useEffect(() => {
-                if (profile && typeof profile === 'object') {
-                    setProfileFormData({
-                        name: profile.name || '',
-                        tagline: profile.tagline || '',
-                        logo_url: profile.logo_url || '',
-                        banner_url: profile.banner_url || '',
-                        visi: profile.visi || '',
-                        misi: profile.misi || '',
-                        alamat: profile.alamat || '',
-                        telepon: profile.telepon || '',
-                        whatsapp: profile.whatsapp || '',
-                        email: profile.email || '',
-                        instagram: profile.instagram || '',
-                        tentang_kami: profile.tentang_kami || '',
-                        legalitas: profile.legalitas || '',
-                        budaya_kerja: typeof profile.budaya_kerja === 'object' 
-                            ? JSON.stringify(profile.budaya_kerja, null, 2) 
-                            : (profile.budaya_kerja || ''),
-                    });
-                }
-            }, [profile]);
-
-            // --- MODAL OPEN ---
             const openProgramModal = (data = null) => {
                 if (data) { setProgramForm({ title: data.title, description: data.description || '', icon: data.icon || 'auto_stories', modul_url: data.modul_url || '' }); setEditingProgramId(data.id); } else { resetProgramForm(); }
                 setActiveModal('program');
@@ -700,31 +607,22 @@
                                 <div><p className="text-sm text-slate-500 font-medium">Pendapatan</p><h3 className="text-2xl font-bold text-slate-800">Rp {totalRevenue.toLocaleString()}</h3></div>
                             </div>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <h3 className="text-lg font-bold text-slate-800 mb-4">Registrasi per Bulan (Tahun Ini)</h3>
-                                <canvas id="registrationsChart" height="200"></canvas>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <h3 className="text-lg font-bold text-slate-800 mb-4">Pendapatan per Bulan (Rp)</h3>
-                                <canvas id="revenueChart" height="200"></canvas>
-                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"><h3 className="text-lg font-bold text-slate-800 mb-4">Registrasi per Bulan (Tahun Ini)</h3><canvas id="registrationsChart" height="200"></canvas></div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"><h3 className="text-lg font-bold text-slate-800 mb-4">Pendapatan per Bulan (Rp)</h3><canvas id="revenueChart" height="200"></canvas></div>
                         </div>
-
                         <DashboardCharts registrations={registrations} schedules={schedules} />
                     </div>
                 );
             };
 
-            // --- RENDER PROFIL (SEDERHANA, PASTI TAMPIL) ---
+            // --- RENDER PROFIL (SUDAH DIPERBAIKI TOTAL) ---
             const renderProfil = () => {
                 const handleSubmit = async (e) => {
                     e.preventDefault();
                     await updateProfile(profileFormData);
                 };
 
-                // JIKA LOADING, TAMPILKAN SPINNER (TAPI PASTI AKAN BERHENTI KARENA PROFILELOADING AKAN FALSE)
                 if (profileLoading) {
                     return (
                         <div className="flex items-center justify-center h-full">
@@ -734,7 +632,6 @@
                     );
                 }
 
-                // PASTIKAN SAFE FORM
                 const safeForm = profileFormData || {};
 
                 return (
@@ -750,80 +647,36 @@
                             {/* KOLOM KIRI */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                                 <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Identitas Utama</h3>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label>
-                                    <input type="text" value={safeForm.name || ''} onChange={(e) => setProfileFormData({ ...safeForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label>
-                                    <input type="text" value={safeForm.tagline || ''} onChange={(e) => setProfileFormData({ ...safeForm, tagline: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                </div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label><input type="text" value={safeForm.name || ''} onChange={(e) => setProfileFormData({ ...safeForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label><input type="text" value={safeForm.tagline || ''} onChange={(e) => setProfileFormData({ ...safeForm, tagline: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label>
-                                        <input type="text" value={safeForm.logo_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, logo_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label>
-                                        <input type="text" value={safeForm.banner_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, banner_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
-                                    </div>
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label><input type="text" value={safeForm.logo_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, logo_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" /></div>
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label><input type="text" value={safeForm.banner_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, banner_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" /></div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label>
-                                    <textarea rows="2" value={safeForm.visi || ''} onChange={(e) => setProfileFormData({ ...safeForm, visi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label>
-                                    <textarea rows="3" value={safeForm.misi || ''} onChange={(e) => setProfileFormData({ ...safeForm, misi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Tentang Kami</label>
-                                    <textarea rows="4" value={safeForm.tentang_kami || ''} onChange={(e) => setProfileFormData({ ...safeForm, tentang_kami: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                                </div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label><textarea rows="2" value={safeForm.visi || ''} onChange={(e) => setProfileFormData({ ...safeForm, visi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label><textarea rows="3" value={safeForm.misi || ''} onChange={(e) => setProfileFormData({ ...safeForm, misi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tentang Kami</label><textarea rows="4" value={safeForm.tentang_kami || ''} onChange={(e) => setProfileFormData({ ...safeForm, tentang_kami: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
                             </div>
 
                             {/* KOLOM KANAN */}
                             <div className="space-y-6">
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Informasi Kontak & Medsos</h3>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
-                                        <textarea rows="2" value={safeForm.alamat || ''} onChange={(e) => setProfileFormData({ ...safeForm, alamat: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Legalitas</label>
-                                        <textarea rows="4" value={safeForm.legalitas || ''} onChange={(e) => setProfileFormData({ ...safeForm, legalitas: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="• Akta Notaris No. 123/2020&#10;• Izin Operasional Kemenkes No. 456/2021"></textarea>
-                                    </div>
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label><textarea rows="2" value={safeForm.alamat || ''} onChange={(e) => setProfileFormData({ ...safeForm, alamat: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Legalitas</label><textarea rows="4" value={safeForm.legalitas || ''} onChange={(e) => setProfileFormData({ ...safeForm, legalitas: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="• Akta Notaris No. 123/2020&#10;• Izin Operasional Kemenkes No. 456/2021"></textarea></div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Telepon</label>
-                                            <input type="text" value={safeForm.telepon || ''} onChange={(e) => setProfileFormData({ ...safeForm, telepon: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label>
-                                            <input type="text" value={safeForm.whatsapp || ''} onChange={(e) => setProfileFormData({ ...safeForm, whatsapp: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
-                                            <input type="email" value={safeForm.email || ''} onChange={(e) => setProfileFormData({ ...safeForm, email: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Instagram</label>
-                                            <input type="text" value={safeForm.instagram || ''} onChange={(e) => setProfileFormData({ ...safeForm, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                        </div>
+                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Telepon</label><input type="text" value={safeForm.telepon || ''} onChange={(e) => setProfileFormData({ ...safeForm, telepon: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
+                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label><input type="text" value={safeForm.whatsapp || ''} onChange={(e) => setProfileFormData({ ...safeForm, whatsapp: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
+                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Email</label><input type="email" value={safeForm.email || ''} onChange={(e) => setProfileFormData({ ...safeForm, email: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
+                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Instagram</label><input type="text" value={safeForm.instagram || ''} onChange={(e) => setProfileFormData({ ...safeForm, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
                                     </div>
                                 </div>
 
-                                {/* Budaya Kerja */}
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Budaya Kerja (JSON)</h3>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Format JSON array</label>
-                                        <textarea rows="6" value={safeForm.budaya_kerja || ''} onChange={(e) => setProfileFormData({ ...safeForm, budaya_kerja: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm" placeholder='[
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Format JSON array</label><textarea rows="6" value={safeForm.budaya_kerja || ''} onChange={(e) => setProfileFormData({ ...safeForm, budaya_kerja: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm" placeholder='[
   {"icon": "lightbulb", "title": "Inovatif", "description": "Senantiasa menghadirkan solusi kreatif..."}
-]'></textarea>
-                                    </div>
+]'></textarea></div>
                                     <p className="text-xs text-slate-400 mt-2">{'Contoh: [{"icon":"lightbulb","title":"Inovatif","description":"Deskripsi..."}]'}</p>
                                 </div>
                             </div>
@@ -833,9 +686,7 @@
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                             <div className="flex justify-between items-center mb-4 border-b pb-2">
                                 <h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3>
-                                <button onClick={() => openStrukturModal()} className="text-sm text-alo-blue font-bold flex items-center hover:underline">
-                                    <span className="material-symbols-outlined text-[16px]">add</span> Tambah
-                                </button>
+                                <button onClick={() => openStrukturModal()} className="text-sm text-alo-blue font-bold flex items-center hover:underline"><span className="material-symbols-outlined text-[16px]">add</span> Tambah</button>
                             </div>
                             {strukturLoading ? (
                                 <div className="text-center py-4"><span className="material-symbols-outlined animate-spin text-2xl text-alo-blue">progress_activity</span></div>
@@ -845,10 +696,7 @@
                                 <div className="space-y-3">
                                     {struktur.map(item => (
                                         <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
-                                            <div>
-                                                <p className="font-bold text-sm text-slate-800">{item.name}</p>
-                                                <p className="text-xs text-slate-500">{item.role} {item.type && `- ${item.type}`}</p>
-                                            </div>
+                                            <div><p className="font-bold text-sm text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.role} {item.type && `- ${item.type}`}</p></div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => openStrukturModal(item)} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
                                                 <button onClick={() => deleteStruktur(item.id)} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
@@ -862,7 +710,8 @@
                 );
             };
 
-            // --- RENDER PROGRAM ---
+            // --- MENU LAIN (PROGRAM, JADWAL, PESERTA, PENGAJAR, BERITA, GALERI) ---
+            // (Saya singkat karena sudah banyak, tapi tetap disertakan)
             const renderProgram = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="flex justify-between items-center">
@@ -883,7 +732,6 @@
                 </div>
             );
 
-            // --- RENDER JADWAL ---
             const renderJadwal = () => {
                 const filtered = schedules.filter(s => s.category === jadwalTab);
                 return (
@@ -904,24 +752,7 @@
                                             const quotaNum = parseInt(sch.quota) || 20;
                                             const filled = 12;
                                             const percent = Math.min(100, Math.round((filled / quotaNum) * 100));
-                                            return (
-                                                <tr key={sch.id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4"><div className="w-16 h-10 rounded bg-slate-200 bg-cover bg-center" style={{ backgroundImage: `url('${sch.img || 'https://via.placeholder.com/200'}')` }}></div></td>
-                                                    <td className="p-4"><p className="font-bold text-slate-800">{sch.course}</p><p className="text-slate-500 text-xs truncate max-w-xs">{sch.description}</p></td>
-                                                    <td className="p-4"><p className="font-semibold text-slate-700">{sch.date}</p><p className="text-slate-500 text-xs">{sch.time}</p></td>
-                                                    <td className="p-4">
-                                                        <div className="flex justify-between text-xs mb-1"><span className="text-slate-500 font-medium">Terisi: {filled}/{quotaNum}</span><span className="font-bold text-alo-blue">{percent}%</span></div>
-                                                        <div className="w-full bg-slate-200 rounded-full h-2"><div className="bg-alo-blue h-2 rounded-full" style={{ width: `${percent}%` }}></div></div>
-                                                    </td>
-                                                    <td className="p-4 text-center"><span className={`px-3 py-1 text-xs font-bold rounded-full ${sch.status === 'Tersedia' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{sch.status || 'Tersedia'}</span></td>
-                                                    <td className="p-4 text-center">
-                                                        <div className="flex justify-center gap-2">
-                                                            <button onClick={() => openScheduleModal(sch)} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
-                                                            <button onClick={() => deleteSchedule(sch.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
+                                            return (<tr key={sch.id} className="hover:bg-slate-50 transition-colors"><td className="p-4"><div className="w-16 h-10 rounded bg-slate-200 bg-cover bg-center" style={{ backgroundImage: `url('${sch.img || 'https://via.placeholder.com/200'}')` }}></div></td><td className="p-4"><p className="font-bold text-slate-800">{sch.course}</p><p className="text-slate-500 text-xs truncate max-w-xs">{sch.description}</p></td><td className="p-4"><p className="font-semibold text-slate-700">{sch.date}</p><p className="text-slate-500 text-xs">{sch.time}</p></td><td className="p-4"><div className="flex justify-between text-xs mb-1"><span className="text-slate-500 font-medium">Terisi: {filled}/{quotaNum}</span><span className="font-bold text-alo-blue">{percent}%</span></div><div className="w-full bg-slate-200 rounded-full h-2"><div className="bg-alo-blue h-2 rounded-full" style={{ width: `${percent}%` }}></div></div></td><td className="p-4 text-center"><span className={`px-3 py-1 text-xs font-bold rounded-full ${sch.status === 'Tersedia' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{sch.status || 'Tersedia'}</span></td><td className="p-4 text-center"><div className="flex justify-center gap-2"><button onClick={() => openScheduleModal(sch)} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button><button onClick={() => deleteSchedule(sch.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button></div></td></tr>);
                                         })}
                                         {filtered.length === 0 && <tr><td colSpan="6" className="p-8 text-center text-slate-400">Belum ada jadwal untuk kategori ini.</td></tr>}
                                     </tbody>
@@ -932,7 +763,6 @@
                 );
             };
 
-            // --- RENDER PESERTA ---
             const renderPeserta = () => {
                 const registrationsWithDetails = registrations.map(reg => {
                     const schedule = schedules.find(s => s.id === reg.schedule_id);
@@ -940,45 +770,13 @@
                 });
                 return (
                     <div className="space-y-6 animate-fade-in flex flex-col h-full">
-                        <div className="flex justify-between items-center">
-                            <div><h2 className="text-2xl font-bold text-slate-800">Data Peserta & Registrasi</h2><p className="text-slate-500 text-sm">Kelola pendaftaran, verifikasi pembayaran, dan e-sertifikat peserta.</p></div>
-                        </div>
+                        <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-slate-800">Data Peserta & Registrasi</h2><p className="text-slate-500 text-sm">Kelola pendaftaran, verifikasi pembayaran, dan e-sertifikat peserta.</p></div></div>
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse min-w-[800px]">
                                     <thead><tr className="bg-white border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider"><th className="p-4 font-semibold">Data Peserta</th><th className="p-4 font-semibold">Program & Jadwal</th><th className="p-4 font-semibold text-center">Status Pembayaran</th><th className="p-4 font-semibold text-center">E-Sertifikat</th><th className="p-4 font-semibold text-center">Aksi</th></tr></thead>
                                     <tbody className="divide-y divide-slate-100 text-sm">
-                                        {registrationsWithDetails.map(reg => (
-                                            <tr key={reg.id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="p-4">
-                                                    <p className="font-bold text-slate-800">{reg.nama_peserta || 'Tamu'}</p>
-                                                    <p className="text-slate-500 text-xs flex items-center gap-1 mt-0.5"><span className="material-symbols-outlined text-[14px]">chat</span> {reg.whatsapp || '-'}</p>
-                                                </td>
-                                                <td className="p-4">
-                                                    <p className="font-semibold text-alo-blue">{reg.schedule?.course || 'Program tidak ditemukan'}</p>
-                                                    <p className="text-slate-500 text-xs">{reg.schedule?.date || '-'}</p>
-                                                </td>
-                                                <td className="p-4 text-center">
-                                                    {reg.status_pembayaran === 'Lunas' ? <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 border border-green-200">Lunas</span>
-                                                        : reg.status_pembayaran === 'Selesai' ? <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Selesai</span>
-                                                            : <span className="px-3 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700 border border-orange-200">Menunggu Cek</span>}
-                                                </td>
-                                                <td className="p-4 text-center">
-                                                    {reg.sertifikat_url ? (
-                                                        <div className="flex justify-center items-center gap-1"><span className="material-symbols-outlined text-green-500 text-[18px]">workspace_premium</span><span className="text-xs font-bold text-green-600">Tersedia</span></div>
-                                                    ) : reg.status_pembayaran === 'Lunas' ? (
-                                                        <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-50 text-alo-blue rounded border border-blue-200 hover:bg-blue-100 font-semibold text-xs flex items-center gap-1 mx-auto transition-colors"><span className="material-symbols-outlined text-[14px]">upload</span> Upload</button>
-                                                    ) : <span className="text-slate-400 text-xs">-</span>}
-                                                </td>
-                                                <td className="p-4 text-center">
-                                                    {reg.status_pembayaran === 'Menunggu Cek' || reg.status_pembayaran === 'Menunggu Pembayaran' ? (
-                                                        <button onClick={() => approvePayment(reg.id)} className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors"><span className="material-symbols-outlined text-[14px]">check_circle</span> Approve</button>
-                                                    ) : reg.status_pembayaran === 'Lunas' && !reg.sertifikat_url ? (
-                                                        <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors"><span className="material-symbols-outlined text-[14px]">upload</span> Upload</button>
-                                                    ) : <span className="text-slate-400 text-xs">-</span>}
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {registrationsWithDetails.map(reg => (<tr key={reg.id} className="hover:bg-slate-50 transition-colors"><td className="p-4"><p className="font-bold text-slate-800">{reg.nama_peserta || 'Tamu'}</p><p className="text-slate-500 text-xs flex items-center gap-1 mt-0.5"><span className="material-symbols-outlined text-[14px]">chat</span> {reg.whatsapp || '-'}</p></td><td className="p-4"><p className="font-semibold text-alo-blue">{reg.schedule?.course || 'Program tidak ditemukan'}</p><p className="text-slate-500 text-xs">{reg.schedule?.date || '-'}</p></td><td className="p-4 text-center">{reg.status_pembayaran === 'Lunas' ? <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 border border-green-200">Lunas</span> : reg.status_pembayaran === 'Selesai' ? <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Selesai</span> : <span className="px-3 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700 border border-orange-200">Menunggu Cek</span>}</td><td className="p-4 text-center">{reg.sertifikat_url ? <div className="flex justify-center items-center gap-1"><span className="material-symbols-outlined text-green-500 text-[18px]">workspace_premium</span><span className="text-xs font-bold text-green-600">Tersedia</span></div> : reg.status_pembayaran === 'Lunas' ? <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-50 text-alo-blue rounded border border-blue-200 hover:bg-blue-100 font-semibold text-xs flex items-center gap-1 mx-auto transition-colors"><span className="material-symbols-outlined text-[14px]">upload</span> Upload</button> : <span className="text-slate-400 text-xs">-</span>}</td><td className="p-4 text-center">{reg.status_pembayaran === 'Menunggu Cek' || reg.status_pembayaran === 'Menunggu Pembayaran' ? <button onClick={() => approvePayment(reg.id)} className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors"><span className="material-symbols-outlined text-[14px]">check_circle</span> Approve</button> : reg.status_pembayaran === 'Lunas' && !reg.sertifikat_url ? <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors"><span className="material-symbols-outlined text-[14px]">upload</span> Upload</button> : <span className="text-slate-400 text-xs">-</span>}</td></tr>))}
                                         {registrationsWithDetails.length === 0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400">Belum ada registrasi/pemesanan.</td></tr>}
                                     </tbody>
                                 </table>
@@ -988,38 +786,18 @@
                 );
             };
 
-            // --- RENDER PENGAJAR ---
             const renderPengajar = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
-                    <div className="flex justify-between items-center">
-                        <div><h2 className="text-2xl font-bold text-slate-800">Data Pengajar / Instruktur</h2><p className="text-slate-500 text-sm">Kelola profil tenaga ahli yang akan ditampilkan di website publik.</p></div>
-                        <button onClick={() => openInstructorModal()} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">person_add</span> Tambah Pengajar</button>
-                    </div>
+                    <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-slate-800">Data Pengajar / Instruktur</h2><p className="text-slate-500 text-sm">Kelola profil tenaga ahli yang akan ditampilkan di website publik.</p></div><button onClick={() => openInstructorModal()} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">person_add</span> Tambah Pengajar</button></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {instructors.map(inst => (
-                            <div key={inst.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center relative group">
-                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                    <button onClick={() => openInstructorModal(inst)} className="bg-blue-50 text-blue-500 p-1.5 rounded hover:bg-blue-100"><span className="material-symbols-outlined text-[16px]">edit</span></button>
-                                    <button onClick={() => deleteInstructor(inst.id)} className="bg-red-50 text-red-500 p-1.5 rounded hover:bg-red-100"><span className="material-symbols-outlined text-[16px]">delete</span></button>
-                                </div>
-                                <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-slate-50 shadow-md mb-4">
-                                    <img src={inst.img} alt={inst.name} className="w-full h-full object-cover" />
-                                </div>
-                                <h3 className="font-bold text-slate-800 text-sm mb-1">{inst.name}</h3>
-                                <p className="text-xs text-alo-blue font-medium">{inst.role}</p>
-                            </div>
-                        ))}
+                        {instructors.map(inst => (<div key={inst.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center relative group"><div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1"><button onClick={() => openInstructorModal(inst)} className="bg-blue-50 text-blue-500 p-1.5 rounded hover:bg-blue-100"><span className="material-symbols-outlined text-[16px]">edit</span></button><button onClick={() => deleteInstructor(inst.id)} className="bg-red-50 text-red-500 p-1.5 rounded hover:bg-red-100"><span className="material-symbols-outlined text-[16px]">delete</span></button></div><div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-4 border-slate-50 shadow-md mb-4"><img src={inst.img} alt={inst.name} className="w-full h-full object-cover" /></div><h3 className="font-bold text-slate-800 text-sm mb-1">{inst.name}</h3><p className="text-xs text-alo-blue font-medium">{inst.role}</p></div>))}
                         {instructors.length === 0 && <div className="col-span-4 text-center text-slate-400 py-12">Belum ada pengajar.</div>}
                     </div>
                 </div>
             );
 
-            // --- RENDER BERITA ---
-            const renderBerita = () => {
-                return <BeritaEditor news={news} addNews={addNews} updateNews={updateNews} deleteNews={deleteNews} showToast={showToast} />;
-            };
+            const renderBerita = () => <BeritaEditor news={news} addNews={addNews} updateNews={updateNews} deleteNews={deleteNews} showToast={showToast} />;
 
-            // --- RENDER GALERI ---
             const renderGaleri = () => {
                 const handleUpload = () => {
                     if (!galleryUrl.trim()) { showToast('Masukkan URL gambar.'); return; }
@@ -1028,102 +806,49 @@
                 };
                 return (
                     <div className="space-y-6 animate-fade-in flex flex-col h-full">
-                        <div className="flex justify-between items-center">
-                            <div><h2 className="text-2xl font-bold text-slate-800">Manajemen Galeri</h2><p className="text-slate-500 text-sm">Unggah dokumentasi foto kegiatan untuk ditampilkan di website.</p></div>
-                            <div className="flex gap-2">
-                                <input type="text" value={galleryUrl} onChange={(e) => setGalleryUrl(e.target.value)} placeholder="URL Gambar" className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-64 text-sm" />
-                                <button onClick={handleUpload} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">cloud_upload</span> Upload</button>
-                            </div>
-                        </div>
+                        <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-slate-800">Manajemen Galeri</h2><p className="text-slate-500 text-sm">Unggah dokumentasi foto kegiatan untuk ditampilkan di website.</p></div><div className="flex gap-2"><input type="text" value={galleryUrl} onChange={(e) => setGalleryUrl(e.target.value)} placeholder="URL Gambar" className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-64 text-sm" /><button onClick={handleUpload} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">cloud_upload</span> Upload</button></div></div>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {gallery.map(item => (
-                                <div key={item.id} className="bg-slate-200 rounded-xl aspect-square relative group overflow-hidden shadow-sm border border-slate-200">
-                                    <img src={item.img_url} alt="Galeri" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                        <button onClick={() => deleteGallery(item.id)} className="bg-white text-red-500 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors" title="Hapus"><span className="material-symbols-outlined text-[16px]">delete</span></button>
-                                    </div>
-                                </div>
-                            ))}
+                            {gallery.map(item => (<div key={item.id} className="bg-slate-200 rounded-xl aspect-square relative group overflow-hidden shadow-sm border border-slate-200"><img src={item.img_url} alt="Galeri" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3"><button onClick={() => deleteGallery(item.id)} className="bg-white text-red-500 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors" title="Hapus"><span className="material-symbols-outlined text-[16px]">delete</span></button></div></div>))}
                             {gallery.length === 0 && <div className="col-span-full text-center text-slate-400 py-12">Belum ada foto galeri.</div>}
                         </div>
                     </div>
                 );
             };
 
-            // --- MODAL ---
+            // --- MODAL RENDER (untuk semua modal) ---
             const renderModal = () => {
                 if (!activeModal) return null;
                 let title = '', content = null, onSave = null, saveLabel = 'Simpan';
-                const closeModal = () => { setActiveModal(null); resetProgramForm(); resetScheduleForm(); resetInstructorForm(); resetSertifikatForm(); resetStrukturForm(); };
+                const closeModal = () => {
+                    setActiveModal(null);
+                    resetProgramForm(); resetScheduleForm(); resetInstructorForm(); resetSertifikatForm(); resetStrukturForm();
+                };
 
                 if (activeModal === 'program') {
                     const isEdit = editingProgramId !== null;
                     title = isEdit ? 'Edit Program Utama' : 'Tambah Program Utama';
-                    content = (
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Program</label><input type="text" value={programForm.title} onChange={(e) => setProgramForm({ ...programForm, title: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="2" value={programForm.description} onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Ikon (Material Icons)</label><input type="text" value={programForm.icon} onChange={(e) => setProgramForm({ ...programForm, icon: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Modul (opsional)</label><input type="text" value={programForm.modul_url} onChange={(e) => setProgramForm({ ...programForm, modul_url: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                        </div>
-                    );
-                    onSave = async () => { if (isEdit) { await updateProgram(editingProgramId, programForm); } else { await addProgram(programForm); } closeModal(); };
+                    content = (<div className="space-y-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Program</label><input type="text" value={programForm.title} onChange={(e) => setProgramForm({ ...programForm, title: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="2" value={programForm.description} onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Ikon (Material Icons)</label><input type="text" value={programForm.icon} onChange={(e) => setProgramForm({ ...programForm, icon: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Modul (opsional)</label><input type="text" value={programForm.modul_url} onChange={(e) => setProgramForm({ ...programForm, modul_url: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>);
+                    onSave = async () => { if (isEdit) await updateProgram(editingProgramId, programForm); else await addProgram(programForm); closeModal(); };
                 } else if (activeModal === 'schedule') {
                     const isEdit = editingScheduleId !== null;
                     title = isEdit ? 'Edit Jadwal' : 'Tambah Jadwal';
-                    content = (
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Acara</label><input type="text" value={scheduleForm.course} onChange={(e) => setScheduleForm({ ...scheduleForm, course: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label><select value={scheduleForm.category} onChange={(e) => setScheduleForm({ ...scheduleForm, category: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Pelatihan</option><option>Webinar</option><option>Workshop</option></select></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label><input type="text" value={scheduleForm.date} onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>
-                            <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Waktu</label><input type="text" value={scheduleForm.time} onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Kuota</label><input type="text" value={scheduleForm.quota} onChange={(e) => setScheduleForm({ ...scheduleForm, quota: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>
-                            <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Harga</label><input type="text" value={scheduleForm.price} onChange={(e) => setScheduleForm({ ...scheduleForm, price: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Status</label><select value={scheduleForm.status} onChange={(e) => setScheduleForm({ ...scheduleForm, status: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Tersedia</option><option>Hampir Penuh</option><option>Penuh</option></select></div></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Gambar</label><input type="text" value={scheduleForm.img} onChange={(e) => setScheduleForm({ ...scheduleForm, img: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="3" value={scheduleForm.description} onChange={(e) => setScheduleForm({ ...scheduleForm, description: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div>
-                        </div>
-                    );
-                    onSave = async () => { if (isEdit) { await updateSchedule(editingScheduleId, scheduleForm); } else { await addSchedule(scheduleForm); } closeModal(); };
+                    content = (<div className="space-y-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Acara</label><input type="text" value={scheduleForm.course} onChange={(e) => setScheduleForm({ ...scheduleForm, course: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label><select value={scheduleForm.category} onChange={(e) => setScheduleForm({ ...scheduleForm, category: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Pelatihan</option><option>Webinar</option><option>Workshop</option></select></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label><input type="text" value={scheduleForm.date} onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Waktu</label><input type="text" value={scheduleForm.time} onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Kuota</label><input type="text" value={scheduleForm.quota} onChange={(e) => setScheduleForm({ ...scheduleForm, quota: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Harga</label><input type="text" value={scheduleForm.price} onChange={(e) => setScheduleForm({ ...scheduleForm, price: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Status</label><select value={scheduleForm.status} onChange={(e) => setScheduleForm({ ...scheduleForm, status: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option>Tersedia</option><option>Hampir Penuh</option><option>Penuh</option></select></div></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Gambar</label><input type="text" value={scheduleForm.img} onChange={(e) => setScheduleForm({ ...scheduleForm, img: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea rows="3" value={scheduleForm.description} onChange={(e) => setScheduleForm({ ...scheduleForm, description: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none"></textarea></div></div>);
+                    onSave = async () => { if (isEdit) await updateSchedule(editingScheduleId, scheduleForm); else await addSchedule(scheduleForm); closeModal(); };
                 } else if (activeModal === 'instructor') {
                     const isEdit = editingInstructorId !== null;
                     title = isEdit ? 'Edit Pengajar' : 'Tambah Pengajar';
-                    content = (
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={instructorForm.name} onChange={(e) => setInstructorForm({ ...instructorForm, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Peran / Spesialisasi</label><input type="text" value={instructorForm.role} onChange={(e) => setInstructorForm({ ...instructorForm, role: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Foto</label><input type="text" value={instructorForm.img} onChange={(e) => setInstructorForm({ ...instructorForm, img: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                        </div>
-                    );
-                    onSave = async () => { if (isEdit) { await updateInstructor(editingInstructorId, instructorForm); } else { await addInstructor(instructorForm); } closeModal(); };
+                    content = (<div className="space-y-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={instructorForm.name} onChange={(e) => setInstructorForm({ ...instructorForm, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Peran / Spesialisasi</label><input type="text" value={instructorForm.role} onChange={(e) => setInstructorForm({ ...instructorForm, role: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">URL Foto</label><input type="text" value={instructorForm.img} onChange={(e) => setInstructorForm({ ...instructorForm, img: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>);
+                    onSave = async () => { if (isEdit) await updateInstructor(editingInstructorId, instructorForm); else await addInstructor(instructorForm); closeModal(); };
                 } else if (activeModal === 'sertifikat') {
                     title = 'Upload E-Sertifikat';
-                    content = (
-                        <div className="space-y-4">
-                            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4"><p className="text-sm text-slate-500">Peserta</p><p className="font-bold text-slate-800">{registrations.find(r => r.id === sertifikatRegId)?.nama_peserta || 'Unknown'}</p></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">URL Sertifikat (PDF/JPG)</label><input type="text" value={sertifikatUrl} onChange={(e) => setSertifikatUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                        </div>
-                    );
+                    content = (<div className="space-y-4"><div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4"><p className="text-sm text-slate-500">Peserta</p><p className="font-bold text-slate-800">{registrations.find(r => r.id === sertifikatRegId)?.nama_peserta || 'Unknown'}</p></div><div><label className="block text-sm font-semibold text-slate-700 mb-2">URL Sertifikat (PDF/JPG)</label><input type="text" value={sertifikatUrl} onChange={(e) => setSertifikatUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>);
                     onSave = async () => { if (!sertifikatUrl.trim()) { showToast('Masukkan URL sertifikat.'); return; } await uploadCertificate(sertifikatRegId, sertifikatUrl.trim()); closeModal(); };
                     saveLabel = 'Upload';
                 } else if (activeModal === 'struktur') {
                     const isEdit = editingStrukturId !== null;
                     title = isEdit ? 'Edit Struktur Organisasi' : 'Tambah Struktur Organisasi';
-                    content = (
-                        <div className="space-y-4">
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={strukturForm.name} onChange={(e) => setStrukturForm({ ...strukturForm, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Jabatan</label><input type="text" value={strukturForm.role} onChange={(e) => setStrukturForm({ ...strukturForm, role: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tipe</label>
-                                <select value={strukturForm.type} onChange={(e) => setStrukturForm({ ...strukturForm, type: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white">
-                                    <option value="Pimpinan">Pimpinan</option>
-                                    <option value="Manajerial">Manajerial</option>
-                                    <option value="Staf Ahli">Staf Ahli</option>
-                                </select>
-                            </div>
-                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Urutan</label><input type="number" value={strukturForm.urutan} onChange={(e) => setStrukturForm({ ...strukturForm, urutan: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div>
-                        </div>
-                    );
-                    onSave = async () => {
-                        if (isEdit) { await updateStruktur(editingStrukturId, strukturForm); } else { await addStruktur(strukturForm); }
-                        closeModal();
-                    };
+                    content = (<div className="space-y-4"><div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label><input type="text" value={strukturForm.name} onChange={(e) => setStrukturForm({ ...strukturForm, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Jabatan</label><input type="text" value={strukturForm.role} onChange={(e) => setStrukturForm({ ...strukturForm, role: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Tipe</label><select value={strukturForm.type} onChange={(e) => setStrukturForm({ ...strukturForm, type: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none bg-white"><option value="Pimpinan">Pimpinan</option><option value="Manajerial">Manajerial</option><option value="Staf Ahli">Staf Ahli</option></select></div><div><label className="block text-sm font-semibold text-slate-700 mb-1">Urutan</label><input type="number" value={strukturForm.urutan} onChange={(e) => setStrukturForm({ ...strukturForm, urutan: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2 border rounded-lg focus:outline-none" /></div></div>);
+                    onSave = async () => { if (isEdit) await updateStruktur(editingStrukturId, strukturForm); else await addStruktur(strukturForm); closeModal(); };
                 }
                 if (!content) return null;
                 return (
@@ -1137,7 +862,7 @@
                 );
             };
 
-            // --- MENU ---
+            // --- MENU SIDEBAR ---
             const menus = [
                 { id: 'Dashboard', icon: 'dashboard', label: 'Ringkasan' },
                 { id: 'Profil', icon: 'corporate_fare', label: 'Profil Lembaga' },
@@ -1173,20 +898,8 @@
                             </div>
                             <div className="p-8 flex-1 overflow-y-auto">
                                 <form onSubmit={handleLogin} className="space-y-5">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Admin</label>
-                                        <div className="relative">
-                                            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span>
-                                            <input required type="email" name="email" placeholder="admin@medikaedu.com" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi</label>
-                                        <div className="relative">
-                                            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span>
-                                            <input required type="password" name="password" placeholder="••••••••" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
-                                        </div>
-                                    </div>
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Admin</label><div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span><input required type="email" name="email" placeholder="admin@medikaedu.com" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" /></div></div>
+                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi</label><div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span><input required type="password" name="password" placeholder="••••••••" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" /></div></div>
                                     {loginError && <div className="text-red-500 text-sm bg-red-50 p-3 rounded-xl border border-red-200">{loginError}</div>}
                                     <button type="submit" disabled={loginLoading} className="w-full bg-alo-blue text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md mt-4 disabled:opacity-50">{loginLoading ? 'Memproses...' : 'Masuk ke Dashboard'}</button>
                                 </form>
@@ -1211,7 +924,7 @@
                 );
             }
 
-            // --- RENDER DASHBOARD ADMIN ---
+            // --- DASHBOARD ADMIN ---
             return (
                 <div className="flex h-screen w-full bg-slate-100 overflow-hidden relative">
                     {toastMessage && (
