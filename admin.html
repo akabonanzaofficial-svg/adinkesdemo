@@ -663,85 +663,147 @@
 
             // --- RENDER PROFIL (DIPERBAIKI) ---
             const renderProfil = () => {
-                const handleSubmit = async (e) => { e.preventDefault(); await updateProfile(profileFormData); };
-                if (profileLoading) return (<div className="flex items-center justify-center h-full"><span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span><span className="ml-3 text-slate-500">Memuat profil...</span></div>);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        await updateProfile(profileFormData);
+    };
 
-                return (
-                    <div className="space-y-6 animate-fade-in">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-slate-800">Pengaturan Profil Lembaga</h2>
-                            <button type="submit" form="profileForm" className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">save</span> Simpan Perubahan</button>
+    if (profileLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                <span className="ml-3 text-slate-500">Memuat profil...</span>
+            </div>
+        );
+    }
+
+    // Jika profile masih kosong, gunakan objek kosong agar tidak crash
+    const safeProfile = profile || {};
+    const safeForm = profileFormData || {};
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-slate-800">Pengaturan Profil Lembaga</h2>
+                <button type="submit" form="profileForm" className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">save</span> Simpan Perubahan
+                </button>
+            </div>
+            <form id="profileForm" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Kolom Kiri */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Identitas Utama</h3>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label>
+                        <input type="text" value={safeForm.name || ''} onChange={(e) => setProfileFormData({ ...safeForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label>
+                        <input type="text" value={safeForm.tagline || ''} onChange={(e) => setProfileFormData({ ...safeForm, tagline: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label>
+                            <input type="text" value={safeForm.logo_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, logo_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
                         </div>
-                        <form id="profileForm" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                                <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Identitas Utama</h3>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label><input type="text" value={profileFormData.name} onChange={(e) => setProfileFormData({ ...profileFormData, name: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label><input type="text" value={profileFormData.tagline} onChange={(e) => setProfileFormData({ ...profileFormData, tagline: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label><input type="text" value={profileFormData.logo_url} onChange={(e) => setProfileFormData({ ...profileFormData, logo_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" /></div>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label><input type="text" value={profileFormData.banner_url} onChange={(e) => setProfileFormData({ ...profileFormData, banner_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" /></div>
-                                </div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label><textarea rows="2" value={profileFormData.visi} onChange={(e) => setProfileFormData({ ...profileFormData, visi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label><textarea rows="3" value={profileFormData.misi} onChange={(e) => setProfileFormData({ ...profileFormData, misi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tentang Kami</label><textarea rows="4" value={profileFormData.tentang_kami} onChange={(e) => setProfileFormData({ ...profileFormData, tentang_kami: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label>
+                            <input type="text" value={safeForm.banner_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, banner_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label>
+                        <textarea rows="2" value={safeForm.visi || ''} onChange={(e) => setProfileFormData({ ...safeForm, visi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label>
+                        <textarea rows="3" value={safeForm.misi || ''} onChange={(e) => setProfileFormData({ ...safeForm, misi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Tentang Kami</label>
+                        <textarea rows="4" value={safeForm.tentang_kami || ''} onChange={(e) => setProfileFormData({ ...safeForm, tentang_kami: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                {/* Kolom Kanan */}
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Informasi Kontak & Medsos</h3>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
+                            <textarea rows="2" value={safeForm.alamat || ''} onChange={(e) => setProfileFormData({ ...safeForm, alamat: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Legalitas (pisahkan dengan baris baru, gunakan bullet • atau -)</label>
+                            <textarea rows="4" value={safeForm.legalitas || ''} onChange={(e) => setProfileFormData({ ...safeForm, legalitas: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">No. Telepon</label>
+                                <input type="text" value={safeForm.telepon || ''} onChange={(e) => setProfileFormData({ ...safeForm, telepon: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                             </div>
-                            <div className="space-y-6">
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Informasi Kontak & Medsos</h3>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label><textarea rows="2" value={profileFormData.alamat} onChange={(e) => setProfileFormData({ ...profileFormData, alamat: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Legalitas (pisahkan dengan baris baru, gunakan bullet • atau -)</label><textarea rows="4" value={profileFormData.legalitas} onChange={(e) => setProfileFormData({ ...profileFormData, legalitas: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">No. Telepon</label><input type="text" value={profileFormData.telepon} onChange={(e) => setProfileFormData({ ...profileFormData, telepon: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label><input type="text" value={profileFormData.whatsapp} onChange={(e) => setProfileFormData({ ...profileFormData, whatsapp: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Email</label><input type="email" value={profileFormData.email} onChange={(e) => setProfileFormData({ ...profileFormData, email: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Instagram URL</label><input type="text" value={profileFormData.instagram} onChange={(e) => setProfileFormData({ ...profileFormData, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                    </div>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Budaya Kerja (JSON)</h3>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Isi dalam format JSON array</label>
-                                        <textarea rows="6" value={profileFormData.budaya_kerja} onChange={(e) => setProfileFormData({ ...profileFormData, budaya_kerja: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm" placeholder='[
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label>
+                                <input type="text" value={safeForm.whatsapp || ''} onChange={(e) => setProfileFormData({ ...safeForm, whatsapp: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                                <input type="email" value={safeForm.email || ''} onChange={(e) => setProfileFormData({ ...safeForm, email: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Instagram URL</label>
+                                <input type="text" value={safeForm.instagram || ''} onChange={(e) => setProfileFormData({ ...safeForm, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Budaya Kerja */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Budaya Kerja (JSON)</h3>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Isi dalam format JSON array</label>
+                            <textarea rows="6" value={safeForm.budaya_kerja || ''} onChange={(e) => setProfileFormData({ ...safeForm, budaya_kerja: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm" placeholder='[
   {"icon": "lightbulb", "title": "Inovatif", "description": "Senantiasa menghadirkan solusi kreatif..."},
   {"icon": "handshake", "title": "Kolaboratif", "description": "Membangun sinergi tim yang solid..."}
 ]'></textarea>
-                                    </div>
-                                    <p className="text-xs text-slate-400 mt-2">{'Contoh format: [{"icon":"lightbulb","title":"Inovatif","description":"Deskripsi..."}]'}</p>
-                                </div>
-                            </div>
-                        </form>
-
-                        {/* STRUKTUR ORGANISASI */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                <h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3>
-                                <button onClick={() => openStrukturModal()} className="text-sm text-alo-blue font-bold flex items-center hover:underline"><span className="material-symbols-outlined text-[16px]">add</span> Tambah</button>
-                            </div>
-                            {strukturLoading ? (
-                                <div className="text-center py-4"><span className="material-symbols-outlined animate-spin text-2xl text-alo-blue">progress_activity</span></div>
-                            ) : struktur.length === 0 ? (
-                                <p className="text-slate-400 text-center py-4">Belum ada data struktur.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {struktur.map(item => (
-                                        <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
-                                            <div>
-                                                <p className="font-bold text-sm text-slate-800">{item.name}</p>
-                                                <p className="text-xs text-slate-500">{item.role} {item.type && `- ${item.type}`}</p>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => openStrukturModal(item)} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
-                                                <button onClick={() => deleteStruktur(item.id)} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                         </div>
+                        <p className="text-xs text-slate-400 mt-2">{'Contoh format: [{"icon":"lightbulb","title":"Inovatif","description":"Deskripsi..."}]'}</p>
                     </div>
-                );
-            };
+                </div>
+            </form>
 
+            {/* STRUKTUR ORGANISASI */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-800">Struktur Organisasi</h3>
+                    <button onClick={() => openStrukturModal()} className="text-sm text-alo-blue font-bold flex items-center hover:underline">
+                        <span className="material-symbols-outlined text-[16px]">add</span> Tambah
+                    </button>
+                </div>
+                {strukturLoading ? (
+                    <div className="text-center py-4"><span className="material-symbols-outlined animate-spin text-2xl text-alo-blue">progress_activity</span></div>
+                ) : struktur.length === 0 ? (
+                    <p className="text-slate-400 text-center py-4">Belum ada data struktur.</p>
+                ) : (
+                    <div className="space-y-3">
+                        {struktur.map(item => (
+                            <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
+                                <div>
+                                    <p className="font-bold text-sm text-slate-800">{item.name}</p>
+                                    <p className="text-xs text-slate-500">{item.role} {item.type && `- ${item.type}`}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => openStrukturModal(item)} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                                    <button onClick={() => deleteStruktur(item.id)} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
             // --- RENDER PROGRAM ---
             const renderProgram = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
