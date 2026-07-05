@@ -397,7 +397,7 @@
                         supabase.from('gallery').select('*').order('id', { ascending: true }),
                         supabase.from('registrations').select('*').order('id', { ascending: true }),
                         supabase.from('institution_profile').select('*').eq('id', 1).single(),
-                        supabase.from('organization_structure').select('*').order('urutan', { ascending: true }),
+                        supabase.from('organization_structure').select('*').order('id', { ascending: true }),
                     ]);
                     if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
                     if (schedulesRes.error) console.error('Error schedules:', schedulesRes.error); else setSchedules(schedulesRes.data || []);
@@ -419,7 +419,7 @@
             };
 
             const fetchStruktur = async () => {
-                const { data, error } = await supabase.from('organization_structure').select('*').order('urutan', { ascending: true });
+                const { data, error } = await supabase.from('organization_structure').select('*').order('id', { ascending: true });
                 if (error) { console.error('Error fetch struktur:', error); setStruktur([]); } else { setStruktur(data || []); }
             };
 
