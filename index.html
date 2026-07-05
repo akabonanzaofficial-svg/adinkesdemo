@@ -721,8 +721,12 @@
                         <div className="max-w-7xl mx-auto px-6">
                             <div className="flex justify-between items-center h-[72px]">
                                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('Beranda')}>
-                                    <span className="text-2xl font-bold text-white tracking-tight uppercase">ADINKESTC</span>
-                                </div>
+    <img 
+        src="https://i.ibb.co.com/27wJLk1p/logo-Adinkes-TC.png" 
+        alt="Logo Adinkes" 
+        className="h-10 w-auto object-contain" 
+    />
+</div>
                                 <div className="hidden lg:flex items-center space-x-2">
                                     <button onClick={() => setActiveTab('Beranda')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Beranda' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Beranda</button>
                                     <button onClick={() => setActiveTab('Profil')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Profil' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Profil</button>
