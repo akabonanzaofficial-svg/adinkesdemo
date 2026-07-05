@@ -722,10 +722,6 @@
                                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('Beranda')}>
                                     <span className="text-2xl font-bold text-white tracking-tight uppercase">ADINKESTC</span>
                                 </div>
-                                <div className="hidden lg:flex flex-1 max-w-md mx-8 relative">
-                                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-white/70 text-[20px]">search</span>
-                                    <input type="text" placeholder="Cari info pelatihan..." className="w-full bg-white/10 border border-white/20 rounded-md py-2 pl-10 pr-4 text-white placeholder-white/70 focus:outline-none focus:bg-white/20 transition-colors" />
-                                </div>
                                 <div className="hidden lg:flex items-center space-x-2">
                                     <button onClick={() => setActiveTab('Beranda')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Beranda' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Beranda</button>
                                     <button onClick={() => setActiveTab('Profil')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Profil' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Profil</button>
@@ -744,9 +740,6 @@
                                     <button onClick={() => setActiveTab('Pengajar')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Pengajar' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Pengajar</button>
                                     <button onClick={() => setActiveTab('Berita')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Berita' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Berita</button>
                                     <button onClick={() => setActiveTab('Galeri')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Galeri' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Galeri</button>
-                                </div>
-                                <div className="hidden lg:flex items-center gap-3 ml-4">
-                                    <a href="member.html" className="bg-white text-alo-blue px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-50 transition-colors">Masuk</a>
                                 </div>
                                 <button className="lg:hidden p-2 text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                                     <span className="material-symbols-outlined text-[24px]">{isMobileMenuOpen ? 'close' : 'menu'}</span>
