@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMS - Medika Edukasi Nusantara</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,6 +15,7 @@
             }
         }
     </script>
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
@@ -28,29 +30,45 @@
         .ql-toolbar { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
         .ql-container { border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
     </style>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Quill Editor -->
     <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+    <!-- Babel untuk JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased overflow-hidden">
     <div id="root"></div>
+
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
+
+        // --- SUPABASE ---
         const supabaseUrl = 'https://ciigcaudmesmtgznyoga.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
+        // --- KOMPONEN CHARTS ---
         function DashboardCharts({ registrations, schedules }) {
             const chartRefs = useRef({});
+
             useEffect(() => {
                 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 const currentYear = new Date().getFullYear();
                 const regPerMonth = Array(12).fill(0);
                 const revPerMonth = Array(12).fill(0);
+
                 registrations.forEach(reg => {
                     const date = new Date(reg.created_at);
                     if (date.getFullYear() === currentYear) {
@@ -63,32 +81,58 @@
                         }
                     }
                 });
+
                 if (chartRefs.current.reg) { chartRefs.current.reg.destroy(); }
                 if (chartRefs.current.rev) { chartRefs.current.rev.destroy(); }
+
                 const ctxReg = document.getElementById('registrationsChart');
                 const ctxRev = document.getElementById('revenueChart');
+
                 if (ctxReg) {
                     chartRefs.current.reg = new Chart(ctxReg, {
                         type: 'bar',
-                        data: { labels: monthNames, datasets: [{ label: 'Registrasi', data: regPerMonth, backgroundColor: 'rgba(30, 115, 190, 0.6)', borderColor: '#1E73BE', borderWidth: 1 }] },
+                        data: {
+                            labels: monthNames,
+                            datasets: [{
+                                label: 'Registrasi',
+                                data: regPerMonth,
+                                backgroundColor: 'rgba(30, 115, 190, 0.6)',
+                                borderColor: '#1E73BE',
+                                borderWidth: 1
+                            }]
+                        },
                         options: { responsive: true, plugins: { legend: { display: false } } }
                     });
                 }
                 if (ctxRev) {
                     chartRefs.current.rev = new Chart(ctxRev, {
                         type: 'line',
-                        data: { labels: monthNames, datasets: [{ label: 'Pendapatan (Rp)', data: revPerMonth, backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: '#22c55e', borderWidth: 2, fill: true, tension: 0.3 }] },
+                        data: {
+                            labels: monthNames,
+                            datasets: [{
+                                label: 'Pendapatan (Rp)',
+                                data: revPerMonth,
+                                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                                borderColor: '#22c55e',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
                         options: { responsive: true, plugins: { legend: { display: false } } }
                     });
                 }
+
                 return () => {
                     if (chartRefs.current.reg) chartRefs.current.reg.destroy();
                     if (chartRefs.current.rev) chartRefs.current.rev.destroy();
                 };
             }, [registrations, schedules]);
+
             return null;
         }
 
+        // --- KOMPONEN EDITOR BERITA ---
         function BeritaEditor({ news, addNews, updateNews, deleteNews, showToast }) {
             const [editorTitle, setEditorTitle] = useState('');
             const [editorContent, setEditorContent] = useState('');
@@ -96,6 +140,7 @@
             const [editingNewsId, setEditingNewsId] = useState(null);
             const quillRef = useRef(null);
             const containerRef = useRef(null);
+
             useEffect(() => {
                 if (containerRef.current && !quillRef.current) {
                     quillRef.current = new Quill(containerRef.current, {
@@ -115,8 +160,13 @@
                         setEditorContent(quillRef.current.root.innerHTML);
                     });
                 }
-                return () => { if (quillRef.current) quillRef.current = null; };
+                return () => {
+                    if (quillRef.current) {
+                        quillRef.current = null;
+                    }
+                };
             }, []);
+
             useEffect(() => {
                 if (quillRef.current && editingNewsId) {
                     const item = news.find(n => n.id === editingNewsId);
@@ -129,6 +179,7 @@
                     setEditorContent('');
                 }
             }, [editingNewsId, news]);
+
             const handlePublish = async () => {
                 if (!editorTitle.trim()) { showToast('Judul harus diisi.'); return; }
                 if (!editorContent.trim()) { showToast('Konten harus diisi.'); return; }
@@ -148,31 +199,58 @@
                 setEditorTitle('');
                 setEditorContent('');
                 setEditorCategory('Berita Lembaga');
-                if (quillRef.current) quillRef.current.root.innerHTML = '';
+                if (quillRef.current) {
+                    quillRef.current.root.innerHTML = '';
+                }
             };
+
             const loadNewsToEditor = (item) => {
                 setEditorTitle(item.title);
                 setEditorContent(item.content || '');
                 setEditorCategory(item.category || 'Berita Lembaga');
                 setEditingNewsId(item.id);
-                if (quillRef.current) quillRef.current.root.innerHTML = item.content || '';
+                if (quillRef.current) {
+                    quillRef.current.root.innerHTML = item.content || '';
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
+
             return (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col shrink-0">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <div><h2 className="text-lg font-bold text-slate-800">Editor Berita / Artikel</h2><p className="text-slate-500 text-xs">Tulis atau edit konten untuk dipublikasikan.</p></div>
-                            <div className="flex gap-3"><button onClick={handlePublish} className="bg-alo-blue text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">{editingNewsId ? 'edit' : 'publish'}</span> {editingNewsId ? 'Update' : 'Publikasikan'}</button></div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-800">Editor Berita / Artikel</h2>
+                                <p className="text-slate-500 text-xs">Tulis atau edit konten untuk dipublikasikan.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button onClick={handlePublish} className="bg-alo-blue text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm">
+                                    <span className="material-symbols-outlined text-[18px]">{editingNewsId ? 'edit' : 'publish'}</span> {editingNewsId ? 'Update' : 'Publikasikan'}
+                                </button>
+                            </div>
                         </div>
                         <div className="p-5 border-b border-slate-100 flex gap-4">
-                            <div className="flex-1"><label className="block text-sm font-semibold text-slate-700 mb-1">Judul Artikel</label><input type="text" value={editorTitle} onChange={(e) => setEditorTitle(e.target.value)} placeholder="Masukkan judul berita..." className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-slate-800" /></div>
-                            <div className="w-1/4"><label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label><select value={editorCategory} onChange={(e) => setEditorCategory(e.target.value)} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"><option>Berita Lembaga</option><option>Artikel Edukasi</option><option>Pengumuman</option></select></div>
+                            <div className="flex-1">
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Judul Artikel</label>
+                                <input type="text" value={editorTitle} onChange={(e) => setEditorTitle(e.target.value)} placeholder="Masukkan judul berita..." className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-slate-800" />
+                            </div>
+                            <div className="w-1/4">
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Kategori</label>
+                                <select value={editorCategory} onChange={(e) => setEditorCategory(e.target.value)} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                                    <option>Berita Lembaga</option><option>Artikel Edukasi</option><option>Pengumuman</option>
+                                </select>
+                            </div>
                         </div>
-                        <div className="flex flex-col p-5"><label className="block text-sm font-semibold text-slate-700 mb-2">Konten / Isi Artikel</label><div ref={containerRef} className="bg-white rounded-lg"></div></div>
+                        <div className="flex flex-col p-5">
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Konten / Isi Artikel</label>
+                            <div ref={containerRef} className="bg-white rounded-lg"></div>
+                        </div>
                     </div>
+
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden shrink-0">
-                        <div className="p-5 border-b border-slate-100 flex justify-between items-center"><h3 className="text-lg font-bold text-slate-800">Daftar Artikel Tersimpan</h3></div>
+                        <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-slate-800">Daftar Artikel Tersimpan</h3>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead><tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider"><th className="p-4 font-semibold w-16">Banner</th><th className="p-4 font-semibold">Judul Artikel</th><th className="p-4 font-semibold">Kategori</th><th className="p-4 font-semibold">Tanggal</th><th className="p-4 font-semibold text-center">Aksi</th></tr></thead>
@@ -183,7 +261,12 @@
                                             <td className="p-4 font-bold text-slate-800">{item.title}</td>
                                             <td className="p-4 text-slate-500">{item.category}</td>
                                             <td className="p-4 text-slate-500">{item.date}</td>
-                                            <td className="p-4 text-center"><div className="flex justify-center gap-2"><button onClick={() => loadNewsToEditor(item)} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button><button onClick={() => deleteNews(item.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button></div></td>
+                                            <td className="p-4 text-center">
+                                                <div className="flex justify-center gap-2">
+                                                    <button onClick={() => loadNewsToEditor(item)} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                                                    <button onClick={() => deleteNews(item.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                     {news.length === 0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400">Belum ada berita.</td></tr>}
@@ -195,8 +278,9 @@
             );
         }
 
+        // --- KOMPONEN UTAMA ---
         function AdminDashboard() {
-            // Auth
+            // --- AUTH STATE ---
             const [session, setSession] = useState(null);
             const [authLoading, setAuthLoading] = useState(true);
             const [userProfile, setUserProfile] = useState(null);
@@ -204,27 +288,27 @@
             const [loginError, setLoginError] = useState('');
             const [loginLoading, setLoginLoading] = useState(false);
 
-            // UI
+            // --- UI STATE ---
             const [activeMenu, setActiveMenu] = useState('Dashboard');
             const [jadwalTab, setJadwalTab] = useState('Pelatihan');
             const [activeModal, setActiveModal] = useState(null);
             const [toastMessage, setToastMessage] = useState('');
             const [loading, setLoading] = useState(true);
 
-            // Data
+            // --- DATA STATE ---
             const [programs, setPrograms] = useState([]);
             const [schedules, setSchedules] = useState([]);
             const [instructors, setInstructors] = useState([]);
             const [news, setNews] = useState([]);
             const [gallery, setGallery] = useState([]);
             const [registrations, setRegistrations] = useState([]);
-            const [profile, setProfile] = useState(null);
+            const [profile, setProfile] = useState({});
             const [profileLoading, setProfileLoading] = useState(true);
             const [profileFormData, setProfileFormData] = useState({});
             const [struktur, setStruktur] = useState([]);
             const [strukturLoading, setStrukturLoading] = useState(true);
 
-            // Form states
+            // --- FORM STATE ---
             const [programForm, setProgramForm] = useState({ title: '', description: '', icon: 'auto_stories', modul_url: '' });
             const [editingProgramId, setEditingProgramId] = useState(null);
             const [scheduleForm, setScheduleForm] = useState({ category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta', price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80', description: '' });
@@ -234,17 +318,19 @@
             const [sertifikatUrl, setSertifikatUrl] = useState('');
             const [sertifikatRegId, setSertifikatRegId] = useState(null);
             const [galleryUrl, setGalleryUrl] = useState('');
+
+            // --- STRUKTUR FORM STATE ---
             const [strukturForm, setStrukturForm] = useState({ name: '', role: '', type: 'Manajerial', urutan: 0 });
             const [editingStrukturId, setEditingStrukturId] = useState(null);
 
-            // Reset
+            // --- RESET ---
             const resetProgramForm = () => { setProgramForm({ title: '', description: '', icon: 'auto_stories', modul_url: '' }); setEditingProgramId(null); };
             const resetScheduleForm = () => { setScheduleForm({ category: 'Pelatihan', course: '', date: '', time: '', quota: '20 Peserta', price: 'Rp 0', status: 'Tersedia', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&h=400&q=80', description: '' }); setEditingScheduleId(null); };
             const resetInstructorForm = () => { setInstructorForm({ name: '', role: '', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' }); setEditingInstructorId(null); };
             const resetSertifikatForm = () => { setSertifikatUrl(''); setSertifikatRegId(null); };
             const resetStrukturForm = () => { setStrukturForm({ name: '', role: '', type: 'Manajerial', urutan: 0 }); setEditingStrukturId(null); };
 
-            // Auth effects
+            // --- AUTH ---
             useEffect(() => {
                 const getSession = async () => {
                     setAuthLoading(true);
@@ -299,7 +385,7 @@
                 showToast('Anda telah keluar dari sistem.');
             };
 
-            // Fetch all data
+            // --- FETCH ALL DATA ---
             const fetchAllData = async () => {
                 setLoading(true);
                 try {
@@ -319,30 +405,79 @@
                     if (newsRes.error) console.error('Error news:', newsRes.error); else setNews(newsRes.data || []);
                     if (galleryRes.error) console.error('Error gallery:', galleryRes.error); else setGallery(galleryRes.data || []);
                     if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error); else setRegistrations(registrationsRes.data || []);
+                    
+                    // Handle profile - jika error karena not found, buat default
                     if (profileRes.error) {
-                        console.error('Error profile:', profileRes.error);
-                        setProfile(null);
+                        if (profileRes.code === 'PGRST116') {
+                            // Data tidak ditemukan, buat default
+                            const defaultProfile = {
+                                id: 1,
+                                name: 'Medika Edukasi Nusantara',
+                                tagline: 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia',
+                                logo_url: '',
+                                banner_url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80',
+                                visi: 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.',
+                                misi: '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...',
+                                alamat: 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345',
+                                telepon: '021 - 888 9999',
+                                whatsapp: '+62 812 3456 7890',
+                                email: 'halo@medikaedu.co.id',
+                                instagram: 'https://instagram.com/medikaedu',
+                                tentang_kami: '',
+                                legalitas: '',
+                                budaya_kerja: '',
+                            };
+                            await supabase.from('institution_profile').insert([defaultProfile]);
+                            setProfile(defaultProfile);
+                        } else {
+                            console.error('Error profile:', profileRes.error);
+                            setProfile({});
+                        }
                     } else {
                         setProfile(profileRes.data || {});
                     }
+
                     if (strukturRes.error) console.error('Error struktur:', strukturRes.error); else setStruktur(strukturRes.data || []);
                 } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
             };
 
-            // Fetch profile separately (for updates)
+            // --- FETCH PROFILE (untuk update) ---
             const fetchProfile = async () => {
                 setProfileLoading(true);
                 try {
                     const { data, error } = await supabase.from('institution_profile').select('*').eq('id', 1).single();
                     if (error) {
-                        console.error('Error fetch profile:', error);
-                        setProfile(null);
+                        if (error.code === 'PGRST116') {
+                            // Data tidak ditemukan, buat default
+                            const defaultProfile = {
+                                id: 1,
+                                name: 'Medika Edukasi Nusantara',
+                                tagline: 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia',
+                                logo_url: '',
+                                banner_url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80',
+                                visi: 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.',
+                                misi: '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...',
+                                alamat: 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345',
+                                telepon: '021 - 888 9999',
+                                whatsapp: '+62 812 3456 7890',
+                                email: 'halo@medikaedu.co.id',
+                                instagram: 'https://instagram.com/medikaedu',
+                                tentang_kami: '',
+                                legalitas: '',
+                                budaya_kerja: '',
+                            };
+                            await supabase.from('institution_profile').insert([defaultProfile]);
+                            setProfile(defaultProfile);
+                        } else {
+                            console.error('Error fetch profile:', error);
+                            setProfile({});
+                        }
                     } else {
                         setProfile(data || {});
                     }
                 } catch (err) {
                     console.error('Error in fetchProfile:', err);
-                    setProfile(null);
+                    setProfile({});
                 } finally {
                     setProfileLoading(false);
                 }
@@ -353,39 +488,10 @@
                 if (error) { console.error('Error fetch struktur:', error); setStruktur([]); } else { setStruktur(data || []); }
             };
 
-            // Sync profile to form data
-            useEffect(() => {
-                if (profile && typeof profile === 'object') {
-                    setProfileFormData({
-                        name: profile.name || '',
-                        tagline: profile.tagline || '',
-                        logo_url: profile.logo_url || '',
-                        banner_url: profile.banner_url || '',
-                        visi: profile.visi || '',
-                        misi: profile.misi || '',
-                        alamat: profile.alamat || '',
-                        telepon: profile.telepon || '',
-                        whatsapp: profile.whatsapp || '',
-                        email: profile.email || '',
-                        instagram: profile.instagram || '',
-                        tentang_kami: profile.tentang_kami || '',
-                        legalitas: profile.legalitas || '',
-                        budaya_kerja: typeof profile.budaya_kerja === 'object' ? JSON.stringify(profile.budaya_kerja, null, 2) : (profile.budaya_kerja || ''),
-                    });
-                } else {
-                    // Reset form if profile is null
-                    setProfileFormData({
-                        name: '', tagline: '', logo_url: '', banner_url: '',
-                        visi: '', misi: '', alamat: '', telepon: '', whatsapp: '', email: '', instagram: '',
-                        tentang_kami: '', legalitas: '', budaya_kerja: ''
-                    });
-                }
-            }, [profile]);
-
-            // CRUD helpers
+            // --- CRUD FUNCTIONS ---
             const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
 
-            // Programs
+            // Program
             const addProgram = async (data) => {
                 const { error } = await supabase.from('programs').insert([data]);
                 if (error) { showToast('Gagal tambah program: ' + error.message); return; }
@@ -408,7 +514,7 @@
                 showToast('Program dihapus.');
             };
 
-            // Schedules
+            // Schedule
             const addSchedule = async (data) => {
                 const { error } = await supabase.from('schedules').insert([data]);
                 if (error) { showToast('Gagal tambah jadwal: ' + error.message); return; }
@@ -431,7 +537,7 @@
                 showToast('Jadwal dihapus.');
             };
 
-            // Instructors
+            // Instructor
             const addInstructor = async (data) => {
                 const { error } = await supabase.from('instructors').insert([data]);
                 if (error) { showToast('Gagal tambah pengajar: ' + error.message); return; }
@@ -506,7 +612,7 @@
                 return true;
             };
 
-            // Struktur
+            // Struktur Organisasi
             const addStruktur = async (data) => {
                 const { error } = await supabase.from('organization_structure').insert([data]);
                 if (error) { showToast('Gagal tambah struktur: ' + error.message); return; }
@@ -543,7 +649,7 @@
                 showToast('Sertifikat berhasil diupload!');
             };
 
-            // Modal open
+            // --- MODAL OPEN ---
             const openProgramModal = (data = null) => {
                 if (data) { setProgramForm({ title: data.title, description: data.description || '', icon: data.icon || 'auto_stories', modul_url: data.modul_url || '' }); setEditingProgramId(data.id); } else { resetProgramForm(); }
                 setActiveModal('program');
@@ -562,7 +668,7 @@
                 setActiveModal('struktur');
             };
 
-            // Render functions
+            // --- RENDER DASHBOARD ---
             const renderDashboard = () => {
                 const totalPrograms = programs.length;
                 const totalSchedules = schedules.length;
@@ -577,25 +683,50 @@
                         if (priceStr) totalRevenue += parseInt(priceStr);
                     }
                 });
+
                 return (
                     <div className="space-y-6 animate-fade-in">
                         <h2 className="text-2xl font-bold text-slate-800">Ringkasan Sistem</h2>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-green-500 hover:shadow-md transition-shadow cursor-pointer"><div className="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">auto_stories</span></div><div><p className="text-sm text-slate-500 font-medium">Program</p><h3 className="text-2xl font-bold text-slate-800">{totalPrograms}</h3></div></div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-orange-500 hover:shadow-md transition-shadow cursor-pointer"><div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">calendar_month</span></div><div><p className="text-sm text-slate-500 font-medium">Jadwal Aktif</p><h3 className="text-2xl font-bold text-slate-800">{totalSchedules}</h3></div></div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow cursor-pointer"><div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">groups</span></div><div><p className="text-sm text-slate-500 font-medium">Total Pendaftar</p><h3 className="text-2xl font-bold text-slate-800">{totalRegistrations}</h3></div></div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-red-500 hover:shadow-md transition-shadow cursor-pointer"><div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">pending_actions</span></div><div><p className="text-sm text-slate-500 font-medium">Menunggu Verifikasi</p><h3 className="text-2xl font-bold text-slate-800">{pendingRegistrations}</h3></div></div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow cursor-pointer"><div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">payments</span></div><div><p className="text-sm text-slate-500 font-medium">Pendapatan</p><h3 className="text-2xl font-bold text-slate-800">Rp {totalRevenue.toLocaleString()}</h3></div></div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-green-500 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">auto_stories</span></div>
+                                <div><p className="text-sm text-slate-500 font-medium">Program</p><h3 className="text-2xl font-bold text-slate-800">{totalPrograms}</h3></div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-orange-500 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">calendar_month</span></div>
+                                <div><p className="text-sm text-slate-500 font-medium">Jadwal Aktif</p><h3 className="text-2xl font-bold text-slate-800">{totalSchedules}</h3></div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">groups</span></div>
+                                <div><p className="text-sm text-slate-500 font-medium">Total Pendaftar</p><h3 className="text-2xl font-bold text-slate-800">{totalRegistrations}</h3></div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-red-500 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">pending_actions</span></div>
+                                <div><p className="text-sm text-slate-500 font-medium">Menunggu Verifikasi</p><h3 className="text-2xl font-bold text-slate-800">{pendingRegistrations}</h3></div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined">payments</span></div>
+                                <div><p className="text-sm text-slate-500 font-medium">Pendapatan</p><h3 className="text-2xl font-bold text-slate-800">Rp {totalRevenue.toLocaleString()}</h3></div>
+                            </div>
                         </div>
+
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"><h3 className="text-lg font-bold text-slate-800 mb-4">Registrasi per Bulan (Tahun Ini)</h3><canvas id="registrationsChart" height="200"></canvas></div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"><h3 className="text-lg font-bold text-slate-800 mb-4">Pendapatan per Bulan (Rp)</h3><canvas id="revenueChart" height="200"></canvas></div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4">Registrasi per Bulan (Tahun Ini)</h3>
+                                <canvas id="registrationsChart" height="200"></canvas>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4">Pendapatan per Bulan (Rp)</h3>
+                                <canvas id="revenueChart" height="200"></canvas>
+                            </div>
                         </div>
+
                         <DashboardCharts registrations={registrations} schedules={schedules} />
                     </div>
                 );
             };
 
+            // --- RENDER PROFIL ---
             const renderProfil = () => {
                 const handleSubmit = async (e) => {
                     e.preventDefault();
@@ -626,37 +757,80 @@
                             {/* KOLOM KIRI */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                                 <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Identitas Utama</h3>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label><input type="text" value={safeForm.name || ''} onChange={(e) => setProfileFormData({ ...safeForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label><input type="text" value={safeForm.tagline || ''} onChange={(e) => setProfileFormData({ ...safeForm, tagline: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label><input type="text" value={safeForm.logo_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, logo_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" /></div>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label><input type="text" value={safeForm.banner_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, banner_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" /></div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Nama Lembaga</label>
+                                    <input type="text" value={safeForm.name || ''} onChange={(e) => setProfileFormData({ ...safeForm, name: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                                 </div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label><textarea rows="2" value={safeForm.visi || ''} onChange={(e) => setProfileFormData({ ...safeForm, visi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label><textarea rows="3" value={safeForm.misi || ''} onChange={(e) => setProfileFormData({ ...safeForm, misi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tentang Kami</label><textarea rows="4" value={safeForm.tentang_kami || ''} onChange={(e) => setProfileFormData({ ...safeForm, tentang_kami: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Tagline</label>
+                                    <input type="text" value={safeForm.tagline || ''} onChange={(e) => setProfileFormData({ ...safeForm, tagline: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Logo URL</label>
+                                        <input type="text" value={safeForm.logo_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, logo_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Banner URL</label>
+                                        <input type="text" value={safeForm.banner_url || ''} onChange={(e) => setProfileFormData({ ...safeForm, banner_url: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Visi</label>
+                                    <textarea rows="2" value={safeForm.visi || ''} onChange={(e) => setProfileFormData({ ...safeForm, visi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Misi</label>
+                                    <textarea rows="3" value={safeForm.misi || ''} onChange={(e) => setProfileFormData({ ...safeForm, misi: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Tentang Kami</label>
+                                    <textarea rows="4" value={safeForm.tentang_kami || ''} onChange={(e) => setProfileFormData({ ...safeForm, tentang_kami: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                                </div>
                             </div>
 
                             {/* KOLOM KANAN */}
                             <div className="space-y-6">
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Informasi Kontak & Medsos</h3>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label><textarea rows="2" value={safeForm.alamat || ''} onChange={(e) => setProfileFormData({ ...safeForm, alamat: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea></div>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Legalitas</label><textarea rows="4" value={safeForm.legalitas || ''} onChange={(e) => setProfileFormData({ ...safeForm, legalitas: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="• Akta Notaris No. 123/2020&#10;• Izin Operasional Kemenkes No. 456/2021"></textarea></div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
+                                        <textarea rows="2" value={safeForm.alamat || ''} onChange={(e) => setProfileFormData({ ...safeForm, alamat: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Legalitas</label>
+                                        <textarea rows="4" value={safeForm.legalitas || ''} onChange={(e) => setProfileFormData({ ...safeForm, legalitas: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="• Akta Notaris No. 123/2020&#10;• Izin Operasional Kemenkes No. 456/2021"></textarea>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Telepon</label><input type="text" value={safeForm.telepon || ''} onChange={(e) => setProfileFormData({ ...safeForm, telepon: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label><input type="text" value={safeForm.whatsapp || ''} onChange={(e) => setProfileFormData({ ...safeForm, whatsapp: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Email</label><input type="email" value={safeForm.email || ''} onChange={(e) => setProfileFormData({ ...safeForm, email: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
-                                        <div><label className="block text-sm font-semibold text-slate-700 mb-1">Instagram</label><input type="text" value={safeForm.instagram || ''} onChange={(e) => setProfileFormData({ ...safeForm, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Telepon</label>
+                                            <input type="text" value={safeForm.telepon || ''} onChange={(e) => setProfileFormData({ ...safeForm, telepon: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp</label>
+                                            <input type="text" value={safeForm.whatsapp || ''} onChange={(e) => setProfileFormData({ ...safeForm, whatsapp: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                                            <input type="email" value={safeForm.email || ''} onChange={(e) => setProfileFormData({ ...safeForm, email: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Instagram</label>
+                                            <input type="text" value={safeForm.instagram || ''} onChange={(e) => setProfileFormData({ ...safeForm, instagram: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Budaya Kerja */}
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Budaya Kerja (JSON)</h3>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1">Format JSON array</label><textarea rows="6" value={safeForm.budaya_kerja || ''} onChange={(e) => setProfileFormData({ ...safeForm, budaya_kerja: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm" placeholder='[
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Format JSON array</label>
+                                        <textarea rows="6" value={safeForm.budaya_kerja || ''} onChange={(e) => setProfileFormData({ ...safeForm, budaya_kerja: e.target.value })} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm" placeholder='[
   {"icon": "lightbulb", "title": "Inovatif", "description": "Senantiasa menghadirkan solusi kreatif..."}
-]'></textarea></div>
+]'></textarea>
+                                    </div>
                                     <p className="text-xs text-slate-400 mt-2">{'Contoh: [{"icon":"lightbulb","title":"Inovatif","description":"Deskripsi..."}]'}</p>
                                 </div>
                             </div>
@@ -678,7 +852,10 @@
                                 <div className="space-y-3">
                                     {struktur.map(item => (
                                         <div key={item.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
-                                            <div><p className="font-bold text-sm text-slate-800">{item.name}</p><p className="text-xs text-slate-500">{item.role} {item.type && `- ${item.type}`}</p></div>
+                                            <div>
+                                                <p className="font-bold text-sm text-slate-800">{item.name}</p>
+                                                <p className="text-xs text-slate-500">{item.role} {item.type && `- ${item.type}`}</p>
+                                            </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => openStrukturModal(item)} className="text-blue-500 hover:bg-blue-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">edit</span></button>
                                                 <button onClick={() => deleteStruktur(item.id)} className="text-red-500 hover:bg-red-100 p-1 rounded"><span className="material-symbols-outlined text-[18px]">delete</span></button>
@@ -692,6 +869,7 @@
                 );
             };
 
+            // --- RENDER PROGRAM ---
             const renderProgram = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="flex justify-between items-center">
@@ -712,6 +890,7 @@
                 </div>
             );
 
+            // --- RENDER JADWAL ---
             const renderJadwal = () => {
                 const filtered = schedules.filter(s => s.category === jadwalTab);
                 return (
@@ -760,6 +939,7 @@
                 );
             };
 
+            // --- RENDER PESERTA ---
             const renderPeserta = () => {
                 const registrationsWithDetails = registrations.map(reg => {
                     const schedule = schedules.find(s => s.id === reg.schedule_id);
@@ -815,6 +995,7 @@
                 );
             };
 
+            // --- RENDER PENGAJAR ---
             const renderPengajar = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="flex justify-between items-center">
@@ -840,10 +1021,12 @@
                 </div>
             );
 
+            // --- RENDER BERITA ---
             const renderBerita = () => {
                 return <BeritaEditor news={news} addNews={addNews} updateNews={updateNews} deleteNews={deleteNews} showToast={showToast} />;
             };
 
+            // --- RENDER GALERI ---
             const renderGaleri = () => {
                 const handleUpload = () => {
                     if (!galleryUrl.trim()) { showToast('Masukkan URL gambar.'); return; }
@@ -874,6 +1057,7 @@
                 );
             };
 
+            // --- MODAL ---
             const renderModal = () => {
                 if (!activeModal) return null;
                 let title = '', content = null, onSave = null, saveLabel = 'Simpan';
@@ -960,6 +1144,7 @@
                 );
             };
 
+            // --- MENU ---
             const menus = [
                 { id: 'Dashboard', icon: 'dashboard', label: 'Ringkasan' },
                 { id: 'Profil', icon: 'corporate_fare', label: 'Profil Lembaga' },
@@ -971,7 +1156,7 @@
                 { id: 'Galeri', icon: 'photo_library', label: 'Galeri Kegiatan' },
             ];
 
-            // --- RENDER ---
+            // --- RENDER UTAMA ---
             if (authLoading) {
                 return (
                     <div className="flex h-screen w-full items-center justify-center bg-slate-100">
@@ -995,8 +1180,20 @@
                             </div>
                             <div className="p-8 flex-1 overflow-y-auto">
                                 <form onSubmit={handleLogin} className="space-y-5">
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Admin</label><div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span><input required type="email" name="email" placeholder="admin@medikaedu.com" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" /></div></div>
-                                    <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi</label><div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span><input required type="password" name="password" placeholder="••••••••" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" /></div></div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Admin</label>
+                                        <div className="relative">
+                                            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span>
+                                            <input required type="email" name="email" placeholder="admin@medikaedu.com" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Kata Sandi</label>
+                                        <div className="relative">
+                                            <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span>
+                                            <input required type="password" name="password" placeholder="••••••••" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-alo-blue focus:outline-none transition-shadow text-sm" />
+                                        </div>
+                                    </div>
                                     {loginError && <div className="text-red-500 text-sm bg-red-50 p-3 rounded-xl border border-red-200">{loginError}</div>}
                                     <button type="submit" disabled={loginLoading} className="w-full bg-alo-blue text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md mt-4 disabled:opacity-50">{loginLoading ? 'Memproses...' : 'Masuk ke Dashboard'}</button>
                                 </form>
@@ -1021,6 +1218,7 @@
                 );
             }
 
+            // --- RENDER DASHBOARD ADMIN ---
             return (
                 <div className="flex h-screen w-full bg-slate-100 overflow-hidden relative">
                     {toastMessage && (
