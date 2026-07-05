@@ -323,31 +323,23 @@
                 showToast('Anda telah keluar dari sistem.');
             };
 
-            // FETCH ALL DATA (diperbaiki)
-            const fetchAllData = async () => {
-                setLoading(true);
+            // --- FETCH DATA (diperbaiki) ---
+            const fetchStruktur = async () => {
+                setStrukturLoading(true);
                 try {
-                    const [programsRes, schedulesRes, instructorsRes, newsRes, galleryRes, registrationsRes, strukturRes] = await Promise.all([
-                        supabase.from('programs').select('*').order('id', { ascending: true }),
-                        supabase.from('schedules').select('*').order('id', { ascending: true }),
-                        supabase.from('instructors').select('*').order('id', { ascending: true }),
-                        supabase.from('news').select('*').order('id', { ascending: true }),
-                        supabase.from('gallery').select('*').order('id', { ascending: true }),
-                        supabase.from('registrations').select('*').order('id', { ascending: true }),
-                        supabase.from('organization_structure').select('*').order('urutan', { ascending: true }),
-                    ]);
-                    if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
-                    if (schedulesRes.error) console.error('Error schedules:', schedulesRes.error); else setSchedules(schedulesRes.data || []);
-                    if (instructorsRes.error) console.error('Error instructors:', instructorsRes.error); else setInstructors(instructorsRes.data || []);
-                    if (newsRes.error) console.error('Error news:', newsRes.error); else setNews(newsRes.data || []);
-                    if (galleryRes.error) console.error('Error gallery:', galleryRes.error); else setGallery(galleryRes.data || []);
-                    if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error); else setRegistrations(registrationsRes.data || []);
-                    if (strukturRes.error) console.error('Error struktur:', strukturRes.error); else setStruktur(strukturRes.data || []);
-                    
-                    // Ambil profil via fetchProfile agar profileLoading diatur
-                    await fetchProfile();
-
-                } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
+                    const { data, error } = await supabase.from('organization_structure').select('*').order('id', { ascending: true });
+                    if (error) {
+                        console.error('Error fetching struktur:', error);
+                        setStruktur([]);
+                    } else {
+                        setStruktur(data || []);
+                    }
+                } catch (err) {
+                    console.error('Unexpected error in fetchStruktur:', err);
+                    setStruktur([]);
+                } finally {
+                    setStrukturLoading(false);
+                }
             };
 
             const fetchProfile = async () => {
@@ -390,12 +382,32 @@
                 }
             };
 
-            const fetchStruktur = async () => {
-                const { data, error } = await supabase.from('organization_structure').select('*').order('urutan', { ascending: true });
-                if (error) { console.error('Error fetch struktur:', error); setStruktur([]); } else { setStruktur(data || []); }
+            const fetchAllData = async () => {
+                setLoading(true);
+                try {
+                    const [programsRes, schedulesRes, instructorsRes, newsRes, galleryRes, registrationsRes] = await Promise.all([
+                        supabase.from('programs').select('*').order('id', { ascending: true }),
+                        supabase.from('schedules').select('*').order('id', { ascending: true }),
+                        supabase.from('instructors').select('*').order('id', { ascending: true }),
+                        supabase.from('news').select('*').order('id', { ascending: true }),
+                        supabase.from('gallery').select('*').order('id', { ascending: true }),
+                        supabase.from('registrations').select('*').order('id', { ascending: true }),
+                    ]);
+                    if (programsRes.error) console.error('Error programs:', programsRes.error); else setPrograms(programsRes.data || []);
+                    if (schedulesRes.error) console.error('Error schedules:', schedulesRes.error); else setSchedules(schedulesRes.data || []);
+                    if (instructorsRes.error) console.error('Error instructors:', instructorsRes.error); else setInstructors(instructorsRes.data || []);
+                    if (newsRes.error) console.error('Error news:', newsRes.error); else setNews(newsRes.data || []);
+                    if (galleryRes.error) console.error('Error gallery:', galleryRes.error); else setGallery(galleryRes.data || []);
+                    if (registrationsRes.error) console.error('Error registrations:', registrationsRes.error); else setRegistrations(registrationsRes.data || []);
+                    
+                    // Ambil profil dan struktur
+                    await fetchProfile();
+                    await fetchStruktur();
+
+                } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
             };
 
-            // CRUD
+            // --- CRUD ---
             const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
 
             const addProgram = async (data) => {
@@ -548,6 +560,7 @@
                 showToast('Sertifikat berhasil diupload!');
             };
 
+            // --- MODAL OPEN ---
             const openProgramModal = (data = null) => {
                 if (data) { setProgramForm({ title: data.title, description: data.description || '', icon: data.icon || 'auto_stories', modul_url: data.modul_url || '' }); setEditingProgramId(data.id); } else { resetProgramForm(); }
                 setActiveModal('program');
@@ -616,7 +629,7 @@
                 );
             };
 
-            // --- RENDER PROFIL (SUDAH DIPERBAIKI TOTAL) ---
+            // --- RENDER PROFIL ---
             const renderProfil = () => {
                 const handleSubmit = async (e) => {
                     e.preventDefault();
@@ -710,8 +723,7 @@
                 );
             };
 
-            // --- MENU LAIN (PROGRAM, JADWAL, PESERTA, PENGAJAR, BERITA, GALERI) ---
-            // (Saya singkat karena sudah banyak, tapi tetap disertakan)
+            // --- RENDER PROGRAM (singkat) ---
             const renderProgram = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="flex justify-between items-center">
@@ -732,6 +744,7 @@
                 </div>
             );
 
+            // --- RENDER JADWAL (singkat) ---
             const renderJadwal = () => {
                 const filtered = schedules.filter(s => s.category === jadwalTab);
                 return (
@@ -763,6 +776,7 @@
                 );
             };
 
+            // --- RENDER PESERTA ---
             const renderPeserta = () => {
                 const registrationsWithDetails = registrations.map(reg => {
                     const schedule = schedules.find(s => s.id === reg.schedule_id);
@@ -786,6 +800,7 @@
                 );
             };
 
+            // --- RENDER PENGAJAR ---
             const renderPengajar = () => (
                 <div className="space-y-6 animate-fade-in flex flex-col h-full">
                     <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-slate-800">Data Pengajar / Instruktur</h2><p className="text-slate-500 text-sm">Kelola profil tenaga ahli yang akan ditampilkan di website publik.</p></div><button onClick={() => openInstructorModal()} className="bg-alo-blue text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center gap-2 shadow-sm"><span className="material-symbols-outlined text-[18px]">person_add</span> Tambah Pengajar</button></div>
@@ -796,8 +811,10 @@
                 </div>
             );
 
+            // --- RENDER BERITA ---
             const renderBerita = () => <BeritaEditor news={news} addNews={addNews} updateNews={updateNews} deleteNews={deleteNews} showToast={showToast} />;
 
+            // --- RENDER GALERI ---
             const renderGaleri = () => {
                 const handleUpload = () => {
                     if (!galleryUrl.trim()) { showToast('Masukkan URL gambar.'); return; }
@@ -815,7 +832,7 @@
                 );
             };
 
-            // --- MODAL RENDER (untuk semua modal) ---
+            // --- MODAL ---
             const renderModal = () => {
                 if (!activeModal) return null;
                 let title = '', content = null, onSave = null, saveLabel = 'Simpan';
@@ -924,7 +941,6 @@
                 );
             }
 
-            // --- DASHBOARD ADMIN ---
             return (
                 <div className="flex h-screen w-full bg-slate-100 overflow-hidden relative">
                     {toastMessage && (
