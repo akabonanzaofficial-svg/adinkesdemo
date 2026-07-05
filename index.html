@@ -84,6 +84,7 @@
             const [programs, setPrograms] = useState([]);
             const [loading, setLoading] = useState(true);
             const [profile, setProfile] = useState(null);
+            const [budayaKerja, setBudayaKerja] = useState([]); // TAMBAHKAN INI
             const [profileLoading, setProfileLoading] = useState(true);
             const [schedules, setSchedules] = useState([]);
             const [schedulesLoading, setSchedulesLoading] = useState(true);
@@ -117,6 +118,17 @@
                 async function fetchProfile() {
                     const { data, error } = await supabase.from('institution_profile').select('*').eq('id', 1).single();
                     if (error) { console.error('Error fetching profile:', error); setProfile(null); } else { setProfile(data); }
+                     // TAMBAHKAN INI UNTUK PARSE BUDAYA KERJA
+    if (data.budaya_kerja) {
+        try {
+            setBudayaKerja(Array.isArray(data.budaya_kerja) ? data.budaya_kerja : JSON.parse(data.budaya_kerja));
+        } catch (e) {
+            setBudayaKerja([]);
+        }
+    } else {
+        setBudayaKerja([]);
+    }
+}
                     setProfileLoading(false);
                 }
                 fetchProfile();
@@ -389,107 +401,203 @@
                         );
 
                     case 'Profil':
-                        if (profileLoading || strukturLoading) {
-                            return (
-                                <div className="animate-fade-in max-w-5xl mx-auto px-6 py-12 text-center">
-                                    <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-                                    <p className="text-slate-500 mt-4">Memuat profil lembaga...</p>
-                                </div>
-                            );
-                        }
-                        if (!profile) {
-                            return <div className="p-12 text-center text-slate-500">Profil belum tersedia.</div>;
-                        }
-                        return (
-                            <div className="animate-fade-in max-w-5xl mx-auto space-y-16 px-6 py-12">
-                                <div className="text-center">
-                                    <h2 className="text-3xl font-bold text-slate-800 mb-4">Profil Lembaga</h2>
-                                    <div className="w-20 h-1 bg-alo-blue mx-auto rounded-full mb-8"></div>
-                                </div>
-                                {profile.logo_url && (
-                                    <div className="flex justify-center mb-6">
-                                        <img src={profile.logo_url} alt="Logo Lembaga" className="max-h-32 w-auto object-contain" />
-                                    </div>
-                                )}
-                                <div className="flex flex-col md:flex-row gap-12 items-center">
-                                    <div className="w-full md:w-1/2">
-                                        <img src={profile.banner_url || "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80"} alt="Gedung Lembaga" className="rounded-3xl shadow-xl w-full object-cover h-[400px]" />
-                                    </div>
-                                    <div className="w-full md:w-1/2 space-y-6 text-slate-600 leading-relaxed">
-                                        <h3 className="text-2xl font-bold text-blue-900">{profile.name || 'Medika Edukasi Nusantara'}</h3>
-                                        <p>{profile.tagline || 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia'}</p>
-                                        <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-alo-blue">
-                                            <h4 className="font-bold text-blue-900 mb-2 text-lg">Visi Kami</h4>
-                                            <p>{profile.visi || 'Menjadi pusat inovasi dan edukasi kesehatan terkemuka di Asia Tenggara.'}</p>
-                                        </div>
-                                        <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-teal-500">
-                                            <h4 className="font-bold text-blue-900 mb-2 text-lg">Misi</h4>
-                                            <p className="whitespace-pre-line">{profile.misi || '1. Menyelenggarakan pelatihan berbasis kompetensi...\n2. Membangun ekosistem belajar digital...'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="pt-12 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">location_on</span> Alamat</h4>
-                                        <p className="text-slate-600">{profile.alamat || 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345'}</p>
-                                    </div>
-                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-alo-blue">contact_mail</span> Kontak</h4>
-                                        <div className="space-y-2 text-sm text-slate-600">
-                                            <p><span className="font-semibold">Telepon:</span> {profile.telepon || '-'}</p>
-                                            <p><span className="font-semibold">WhatsApp:</span> {profile.whatsapp || '-'}</p>
-                                            <p><span className="font-semibold">Email:</span> {profile.email || '-'}</p>
-                                            <p><span className="font-semibold">Instagram:</span> <a href={profile.instagram || '#'} target="_blank" className="text-alo-blue hover:underline">{profile.instagram || '-'}</a></p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="pt-12 border-t border-slate-200">
-                                    <div className="text-center mb-10 max-w-2xl mx-auto">
-                                        <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
-                                        <p className="text-slate-500 leading-relaxed">Keberhasilan lembaga kami didukung oleh jajaran pimpinan dan manajemen yang kompeten, berdedikasi tinggi, serta memiliki pengalaman puluhan tahun.</p>
-                                    </div>
-                                    {strukturLoading ? (
-                                        <div className="text-center py-8">
-                                            <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
-                                            <p className="text-slate-500 mt-2">Memuat struktur organisasi...</p>
-                                        </div>
-                                    ) : struktur.length === 0 ? (
-                                        <p className="text-center text-slate-400">Belum ada data struktur organisasi.</p>
-                                    ) : (
-                                        <div className="flex flex-col items-center space-y-8">
-                                            {struktur.length > 0 && (
-                                                <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative">
-                                                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
-                                                        <span className="material-symbols-outlined text-[24px]">group</span>
-                                                    </div>
-                                                    <h4 className="text-lg font-bold text-slate-800 mt-4">{struktur[0]?.name}</h4>
-                                                    <p className="text-alo-blue font-semibold text-sm">{struktur[0]?.role}</p>
-                                                </div>
-                                            )}
-                                            {struktur.length > 1 && (
-                                                <>
-                                                    <div className="w-px h-8 bg-slate-300"></div>
-                                                    <div className="w-full max-w-2xl h-px bg-slate-300 relative">
-                                                        <div className="absolute left-0 top-0 w-px h-8 bg-slate-300"></div>
-                                                        <div className="absolute right-0 top-0 w-px h-8 bg-slate-300"></div>
-                                                        <div className="absolute left-1/2 top-0 w-px h-8 bg-slate-300"></div>
-                                                    </div>
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl pt-8">
-                                                        {struktur.slice(1).map(person => (
-                                                            <div key={person.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow">
-                                                                <h4 className="font-bold text-slate-800">{person.name}</h4>
-                                                                <p className="text-teal-600 text-sm mt-1">{person.role}</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
+    if (profileLoading) {
+        return (
+            <div className="animate-fade-in max-w-5xl mx-auto px-6 py-12 text-center">
+                <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
+                <p className="text-slate-500 mt-4">Memuat profil lembaga...</p>
+            </div>
+        );
+    }
+    if (!profile) {
+        return <div className="p-12 text-center text-slate-500">Profil belum tersedia.</div>;
+    }
+
+    // Default budaya kerja jika kosong
+    const defaultBudaya = [
+        { icon: 'lightbulb', title: 'Inovatif', description: 'Senantiasa menghadirkan solusi kreatif dan terkini.' },
+        { icon: 'handshake', title: 'Kolaboratif', description: 'Membangun sinergi tim yang solid dan saling mendukung.' },
+        { icon: 'school', title: 'Profesional', description: 'Berorientasi pada kompetensi dan hasil terbaik.' },
+        { icon: 'verified', title: 'Integritas', description: 'Menjunjung tinggi etika, kejujuran, dan tanggung jawab.' }
+    ];
+    const budayaItems = budayaKerja.length > 0 ? budayaKerja : defaultBudaya;
+
+    // Untuk legalitas, pecah menjadi array jika berbentuk teks dengan bullet
+    let legalitasList = [];
+    if (profile.legalitas) {
+        if (Array.isArray(profile.legalitas)) {
+            legalitasList = profile.legalitas;
+        } else {
+            // Jika berbentuk teks dengan bullet (• atau -)
+            legalitasList = profile.legalitas.split('\n').filter(item => item.trim().length > 0);
+        }
+    }
+
+    return (
+        <div className="animate-fade-in max-w-5xl mx-auto space-y-12 px-6 py-12">
+            {/* HEADER */}
+            <div className="text-center">
+                {profile.logo_url && (
+                    <div className="flex justify-center mb-6">
+                        <img src={profile.logo_url} alt="Logo Lembaga" className="max-h-24 w-auto object-contain" />
+                    </div>
+                )}
+                <h2 className="text-3xl font-bold text-slate-800 mb-2">{profile.name || 'Medika Edukasi Nusantara'}</h2>
+                <p className="text-slate-500 text-lg">{profile.tagline || 'Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia'}</p>
+                <div className="w-20 h-1 bg-alo-blue mx-auto rounded-full mt-4"></div>
+            </div>
+
+            {/* BANNER */}
+            {profile.banner_url && (
+                <div className="rounded-2xl overflow-hidden shadow-lg">
+                    <img src={profile.banner_url} alt="Banner" className="w-full h-64 md:h-80 object-cover" />
+                </div>
+            )}
+
+            {/* GRID 2 KOLOM: TENTANG KAMI & VISI MISI */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* TENTANG KAMI */}
+                <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-6 border border-slate-100">
+                    <h3 className="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-alo-blue">info</span> Tentang Kami
+                    </h3>
+                    <div className="w-12 h-1 bg-alo-blue rounded-full mb-4"></div>
+                    <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                        {profile.tentang_kami || 'Deskripsi tentang lembaga belum diisi.'}
+                    </p>
+                </div>
+
+                {/* VISI & MISI */}
+                <div className="space-y-6">
+                    {/* VISI */}
+                    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-6 border border-slate-100">
+                        <h4 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-amber-500">star</span> Visi
+                        </h4>
+                        <p className="text-slate-600 leading-relaxed">{profile.visi || 'Visi lembaga belum diisi.'}</p>
+                    </div>
+                    {/* MISI */}
+                    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-6 border border-slate-100">
+                        <h4 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-teal-500">target</span> Misi
+                        </h4>
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-line">{profile.misi || 'Misi lembaga belum diisi.'}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* BUDAYA KERJA */}
+            <div className="bg-slate-50 rounded-2xl p-6 md:p-8 border border-slate-200">
+                <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-alo-blue">diversity_3</span> Budaya Kerja
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {budayaItems.map((item, index) => (
+                        <div key={index} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 text-center border border-slate-100">
+                            <div className="w-12 h-12 bg-blue-50 text-alo-blue rounded-full flex items-center justify-center mx-auto mb-3">
+                                <span className="material-symbols-outlined text-[28px]">{item.icon || 'favorite'}</span>
+                            </div>
+                            <h4 className="font-bold text-slate-800 text-sm">{item.title || 'Budaya'}</h4>
+                            <p className="text-slate-500 text-xs mt-1">{item.description || '-'}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* LEGALITAS */}
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow p-6 border border-slate-100">
+                <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-emerald-600">gavel</span> Legalitas
+                </h3>
+                <div className="w-12 h-1 bg-emerald-500 rounded-full mb-4"></div>
+                {legalitasList.length > 0 ? (
+                    <ul className="space-y-3">
+                        {legalitasList.map((item, idx) => (
+                            <li key={idx} className="flex items-start gap-3 text-slate-600">
+                                <span className="material-symbols-outlined text-emerald-500 text-[20px]">check_circle</span>
+                                <span>{item.replace(/^[•\-]\s*/, '')}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-slate-400">Belum ada data legalitas.</p>
+                )}
+            </div>
+
+            {/* GALERI KEGIATAN */}
+            <div>
+                <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-alo-blue">photo_library</span> Galeri Kegiatan
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {gallery.length === 0 ? (
+                        <div className="col-span-full text-center text-slate-400 py-8">Belum ada foto galeri.</div>
+                    ) : (
+                        gallery.map((item) => (
+                            <div key={item.id} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer bg-slate-200 shadow-sm hover:shadow-xl transition-all">
+                                <img src={item.img_url} alt="Galeri" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-3xl drop-shadow-lg">zoom_in</span>
                                 </div>
                             </div>
-                        );
+                        ))
+                    )}
+                </div>
+            </div>
 
+            {/* ALAMAT & KONTAK */}
+            <div className="pt-8 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-alo-blue">location_on</span> Alamat
+                    </h4>
+                    <p className="text-slate-600">{profile.alamat || 'Gd. Kesehatan Lt.3, Jl. Merdeka No. 99, Kebayoran, Jakarta Selatan 12345'}</p>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-alo-blue">contact_mail</span> Kontak
+                    </h4>
+                    <div className="space-y-2 text-sm text-slate-600">
+                        <p><span className="font-semibold">Telepon:</span> {profile.telepon || '-'}</p>
+                        <p><span className="font-semibold">WhatsApp:</span> {profile.whatsapp || '-'}</p>
+                        <p><span className="font-semibold">Email:</span> {profile.email || '-'}</p>
+                        <p><span className="font-semibold">Instagram:</span> <a href={profile.instagram || '#'} target="_blank" className="text-alo-blue hover:underline">{profile.instagram || '-'}</a></p>
+                    </div>
+                </div>
+            </div>
+
+            {/* STRUKTUR ORGANISASI */}
+            <div className="pt-8 border-t border-slate-200">
+                <div className="text-center mb-10">
+                    <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
+                    <p className="text-slate-500">Keberhasilan lembaga kami didukung oleh jajaran pimpinan dan manajemen yang kompeten.</p>
+                </div>
+                <div className="flex flex-col items-center space-y-8">
+                    <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative">
+                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
+                            <span className="material-symbols-outlined text-[24px]">group</span>
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-800 mt-4">{orgStructure[0]?.name || 'Dr. Hendra Wijaya, MARS'}</h4>
+                        <p className="text-alo-blue font-semibold text-sm">{orgStructure[0]?.role || 'Direktur Utama'}</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-300"></div>
+                    <div className="w-full max-w-2xl h-px bg-slate-300 relative">
+                        <div className="absolute left-0 top-0 w-px h-8 bg-slate-300"></div>
+                        <div className="absolute right-0 top-0 w-px h-8 bg-slate-300"></div>
+                        <div className="absolute left-1/2 top-0 w-px h-8 bg-slate-300"></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl pt-8">
+                        {orgStructure.slice(1).map(person => (
+                            <div key={person.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow">
+                                <h4 className="font-bold text-slate-800">{person.name}</h4>
+                                <p className="text-teal-600 text-sm mt-1">{person.role}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
                     case 'Program':
                         return (
                             <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
