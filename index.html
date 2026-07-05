@@ -115,25 +115,33 @@
             }, []);
 
             useEffect(() => {
-                async function fetchProfile() {
-                    const { data, error } = await supabase.from('institution_profile').select('*').eq('id', 1).single();
-                    if (error) { console.error('Error fetching profile:', error); setProfile(null); } else { setProfile(data); }
-                     // TAMBAHKAN INI UNTUK PARSE BUDAYA KERJA
-    if (data.budaya_kerja) {
-        try {
-            setBudayaKerja(Array.isArray(data.budaya_kerja) ? data.budaya_kerja : JSON.parse(data.budaya_kerja));
-        } catch (e) {
-            setBudayaKerja([]);
-        }
-    } else {
-        setBudayaKerja([]);
-    }
-}
-                    setProfileLoading(false);
+    async function fetchProfile() {
+        setProfileLoading(true);
+        const { data, error } = await supabase
+            .from('institution_profile')
+            .select('*')
+            .eq('id', 1)
+            .single();
+        if (error) {
+            console.error('Error fetching profile:', error);
+            setProfile(null);
+        } else {
+            setProfile(data);
+            // Parse budaya_kerja
+            if (data.budaya_kerja) {
+                try {
+                    setBudayaKerja(Array.isArray(data.budaya_kerja) ? data.budaya_kerja : JSON.parse(data.budaya_kerja));
+                } catch (e) {
+                    setBudayaKerja([]);
                 }
-                fetchProfile();
-            }, []);
-
+            } else {
+                setBudayaKerja([]);
+            }
+        }
+        setProfileLoading(false);
+    }
+    fetchProfile();
+}, []);
             useEffect(() => {
                 async function fetchSchedules() {
                     setSchedulesLoading(true);
