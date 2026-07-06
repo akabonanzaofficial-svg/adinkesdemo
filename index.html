@@ -792,13 +792,26 @@
                                                         )}
                                                     </div>
                                                     <div className="mt-auto flex items-center gap-3">
-                                                        <button onClick={() => handleBookingClick(sch)} className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center">
-                                                            Pesan Pelatihan
-                                                        </button>
-                                                        <button onClick={() => openShareModal(sch.course, 'course', sch.id)} className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" title="Bagikan Pelatihan">
-                                                            <span className="material-symbols-outlined text-[22px]">share</span>
-                                                        </button>
-                                                    </div>
+    <button 
+        onClick={(e) => { 
+            e.stopPropagation(); 
+            handleBookingClick(sch); 
+        }} 
+        className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center"
+    >
+        Pesan Pelatihan
+    </button>
+    <button 
+        onClick={(e) => { 
+            e.stopPropagation(); 
+            openShareModal(sch.course, 'course', sch.id); 
+        }} 
+        className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" 
+        title="Bagikan Pelatihan"
+    >
+        <span className="material-symbols-outlined text-[22px]">share</span>
+    </button>
+</div>
                                                 </div>
                                             </div>
                                         ))
