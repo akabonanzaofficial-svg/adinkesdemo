@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medika Edukasi Nusantara</title>
+    <title>ADINKESTC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -276,9 +276,9 @@
             const handleShareAction = (platform) => {
                 let text = '';
                 if (shareModalData.type === 'news') {
-                    text = encodeURIComponent(`Halo! Coba baca artikel menarik ini: "${shareModalData.title}" dari MedikaEdu.`);
+                    text = encodeURIComponent(`Halo! Coba baca artikel menarik ini: "${shareModalData.title}" dari ADINKESTC.`);
                 } else {
-                    text = encodeURIComponent(`Halo! Saya tertarik dengan ${shareModalData.title} di MedikaEdu. Cek jadwal lengkapnya di website mereka!`);
+                    text = encodeURIComponent(`Halo! Saya tertarik dengan ${shareModalData.title} di ADINKESTC. Cek jadwal lengkapnya di website mereka!`);
                 }
                 const url = encodeURIComponent(shareModalData.url);
                 if (platform === 'whatsapp') {
@@ -345,9 +345,10 @@
                                 {/* BANNER */}
                                 <section className="bg-alo-blue pt-12 pb-0 px-6 relative overflow-hidden">
                                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end">
-                                        <div className="w-full md:w-3/5 pb-20 pt-10 z-10 text-center md:text-left">
-                                            <h1 className="text-4xl md:text-5xl lg:text-[54px] font-bold text-white mb-4 leading-tight tracking-tight">Layanan Cepat dan Tepat</h1>
-                                            <p className="text-xl text-blue-100 mb-12 font-medium">Layanan Booking Pelatihan dan Edukasi Medis Terbaik di Indonesia</p>
+                                        <div className="w-full md:w-3/5 pb-0 pt-10 z-10 text-center md:text-left">
+                                            <h1 className="text-4xl md:text-5xl lg:text-[54px] font-bold text-white mb-4 leading-tight tracking-tight">Adinkes Training Center</h1>
+                                            <p className="text-xl text-blue-100 mb-0 font-medium">Lembaga Pelatihan dan Edukasi Medis Terpercaya di Indonesia</p>
+                                            <p className="text-xl text-blue-100 mb-12 font-medium">Terakreditasi A (Paripurna) Kemenkes RI</p>
                                             <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-10">
                                                 {heroActions.map(action => (
                                                     <div key={action.id} className="flex flex-col items-center cursor-pointer group" onClick={action.action}>
@@ -927,7 +928,7 @@
                         <div className="max-w-7xl mx-auto px-6">
                             <div className="flex justify-between items-center h-[72px]">
                                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigateTo('Beranda')}>
-                                    <span className="text-2xl font-bold text-white tracking-tight uppercase">MEDIKAEDU</span>
+                                    <span className="text-2xl font-bold text-white tracking-tight uppercase">ADINKESTC</span>
                                 </div>
                                 <div className="hidden lg:flex items-center space-x-2">
                                     <button onClick={() => navigateTo('Beranda')} className={`px-3 py-2 text-sm transition-all ${activeTab === 'Beranda' ? 'text-white font-bold' : 'text-blue-100 hover:text-white'}`}>Beranda</button>
@@ -981,8 +982,8 @@
                     <footer className="bg-[#0f172a] text-slate-300 py-16 mt-auto border-t-[8px] border-alo-blue">
                         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
                             <div className="col-span-1 md:col-span-1">
-                                <span className="text-2xl font-bold text-white tracking-tight uppercase block mb-4">MEDIKAEDU</span>
-                                <p className="text-slate-400 mb-6 text-sm leading-relaxed">Lembaga pelatihan dan edukasi medis independen terkemuka di Indonesia, mencetak SDM kesehatan yang kompeten dan profesional.</p>
+                                <span className="text-2xl font-bold text-white tracking-tight uppercase block mb-4">Adinkes Training Center</span>
+                                <p className="text-slate-400 mb-6 text-sm leading-relaxed">Lembaga pelatihan dan edukasi medis Terpercaya di Indonesia dengan Akreditasi A Dari Kemenkes RI, mencetak SDM kesehatan yang kompeten dan profesional.</p>
                             </div>
                             <div>
                                 <h4 className="text-white font-bold mb-6 tracking-wide">PINTASAN</h4>
