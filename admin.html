@@ -47,8 +47,11 @@
 
         const supabaseUrl = 'https://ciigcaudmesmtgznyoga.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaWdjYXVkbWVzbXRnem55b2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE3ODMsImV4cCI6MjA5ODU1Nzc4M30.YvJsAghqgb1RnXrJGVZQgl1veHj-75_ewpkmNBXpZfQ';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: false
+    }
+});
         function DashboardCharts({ registrations, schedules }) {
             const chartRefs = useRef({});
             useEffect(() => {
