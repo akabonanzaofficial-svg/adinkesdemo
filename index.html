@@ -737,90 +737,86 @@
                     }
 
                     case 'Jadwal': {
-                        const filteredSchedules = schedules.filter(s => s.category === scheduleCategory);
-                        return (
-                            <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
-                                <div className="text-center mb-8">
-                                    <h2 className="text-3xl font-bold text-slate-800 mb-2">Jadwal & Reservasi</h2>
-                                    <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
+    const filteredSchedules = schedules.filter(s => s.category === scheduleCategory);
+    return (
+        <div className="animate-fade-in max-w-6xl mx-auto px-6 py-12">
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-slate-800 mb-2">Jadwal & Reservasi</h2>
+                <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {['Pelatihan', 'Webinar', 'Workshop'].map(category => (
+                    <button key={category} onClick={() => { setScheduleCategory(category); setExpandedScheduleId(null); }} className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${scheduleCategory === category ? 'bg-alo-blue text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
+                        {category}
+                    </button>
+                ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {filteredSchedules.length === 0 ? (
+                    <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+                        <span className="material-symbols-outlined text-[48px] text-slate-300 mb-4">event_busy</span>
+                        <p className="font-medium">Belum ada jadwal {scheduleCategory.toLowerCase()} dalam waktu dekat.</p>
+                    </div>
+                ) : (
+                    filteredSchedules.map((sch) => (
+                        <div key={sch.id} className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 group">
+                            {/* 🔥 PERBAIKAN: klik gambar → buka modal booking (fullscreen) */}
+                            <div className="relative h-56 md:h-64 overflow-hidden cursor-pointer" onClick={() => handleBookingClick(sch)}>
+                                <img src={sch.img} alt={sch.course} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                <div className="absolute top-4 right-4">
+                                    <span className={`px-4 py-1.5 text-xs font-bold rounded-full shadow-md backdrop-blur-md ${sch.status === 'Tersedia' ? 'bg-green-500/90 text-white' : 'bg-orange-500/90 text-white'}`}>{sch.status}</span>
                                 </div>
-                                <div className="flex flex-wrap justify-center gap-2 mb-8">
-                                    {['Pelatihan', 'Webinar', 'Workshop'].map(category => (
-                                        <button key={category} onClick={() => { setScheduleCategory(category); setExpandedScheduleId(null); }} className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${scheduleCategory === category ? 'bg-alo-blue text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-                                            {category}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {filteredSchedules.length === 0 ? (
-                                        <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
-                                            <span className="material-symbols-outlined text-[48px] text-slate-300 mb-4">event_busy</span>
-                                            <p className="font-medium">Belum ada jadwal {scheduleCategory.toLowerCase()} dalam waktu dekat.</p>
-                                        </div>
-                                    ) : (
-                                        filteredSchedules.map((sch) => (
-                                            <div key={sch.id} className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 group">
-                                                <div className="relative h-56 md:h-64 overflow-hidden cursor-pointer" onClick={() => toggleDescription(sch.id)}>
-                                                    <img src={sch.img} alt={sch.course} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                                    <div className="absolute top-4 right-4">
-                                                        <span className={`px-4 py-1.5 text-xs font-bold rounded-full shadow-md backdrop-blur-md ${sch.status === 'Tersedia' ? 'bg-green-500/90 text-white' : 'bg-orange-500/90 text-white'}`}>{sch.status}</span>
-                                                    </div>
-                                                    <div className="absolute bottom-4 left-4 right-4">
-                                                        <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">{sch.course}</h3>
-                                                    </div>
-                                                </div>
-                                                <div className="p-6 md:p-8 flex flex-col flex-grow bg-white relative z-10">
-                                                    <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600 mb-6 font-medium">
-                                                        <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-alo-blue">calendar_month</span> {sch.date}</span>
-                                                        <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-orange-500">schedule</span> {sch.time}</span>
-                                                        <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-teal-500">group</span> {sch.quota}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between mb-6">
-                                                        <span className="text-slate-500 text-sm">Investasi</span>
-                                                        <span className="text-2xl font-black text-alo-blue tracking-tight">{sch.price}</span>
-                                                    </div>
-                                                    <div className="mb-6">
-                                                        <button onClick={() => toggleDescription(sch.id)} className="w-full flex justify-between items-center py-3 px-4 bg-slate-50 rounded-xl text-sm font-bold text-slate-600 hover:text-alo-blue transition-colors border border-slate-100">
-                                                            Detail Pelatihan
-                                                            <span className={`material-symbols-outlined transition-transform duration-300 ${expandedScheduleId === sch.id ? 'rotate-180' : ''}`}>expand_more</span>
-                                                        </button>
-                                                        {expandedScheduleId === sch.id && (
-                                                            <div className="mt-3 p-4 bg-blue-50/50 rounded-xl text-sm text-slate-600 border border-blue-100 animate-slide-down leading-relaxed">
-                                                                <p>{sch.description}</p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="mt-auto flex items-center gap-3">
-    <button 
-        onClick={(e) => { 
-            e.stopPropagation(); 
-            handleBookingClick(sch); 
-        }} 
-        className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center"
-    >
-        Pesan Pelatihan
-    </button>
-    <button 
-        onClick={(e) => { 
-            e.stopPropagation(); 
-            openShareModal(sch.course, 'course', sch.id); 
-        }} 
-        className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" 
-        title="Bagikan Pelatihan"
-    >
-        <span className="material-symbols-outlined text-[22px]">share</span>
-    </button>
-</div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
+                                <div className="absolute bottom-4 left-4 right-4">
+                                    <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">{sch.course}</h3>
                                 </div>
                             </div>
-                        );
-                    }
-
+                            <div className="p-6 md:p-8 flex flex-col flex-grow bg-white relative z-10">
+                                <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600 mb-6 font-medium">
+                                    <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-alo-blue">calendar_month</span> {sch.date}</span>
+                                    <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-orange-500">schedule</span> {sch.time}</span>
+                                    <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px] text-teal-500">group</span> {sch.quota}</span>
+                                </div>
+                                <div className="flex items-center justify-between mb-6">
+                                    <span className="text-slate-500 text-sm">Investasi</span>
+                                    <span className="text-2xl font-black text-alo-blue tracking-tight">{sch.price}</span>
+                                </div>
+                                <div className="mb-6">
+                                    <button onClick={() => toggleDescription(sch.id)} className="w-full flex justify-between items-center py-3 px-4 bg-slate-50 rounded-xl text-sm font-bold text-slate-600 hover:text-alo-blue transition-colors border border-slate-100">
+                                        Detail Pelatihan
+                                        <span className={`material-symbols-outlined transition-transform duration-300 ${expandedScheduleId === sch.id ? 'rotate-180' : ''}`}>expand_more</span>
+                                    </button>
+                                    {expandedScheduleId === sch.id && (
+                                        <div className="mt-3 p-4 bg-blue-50/50 rounded-xl text-sm text-slate-600 border border-blue-100 animate-slide-down leading-relaxed">
+                                            <p>{sch.description}</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-auto flex items-center gap-3">
+                                    {/* 🔥 PERBAIKAN: tombol Pesan → stopPropagation agar tidak memicu toggle deskripsi */}
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleBookingClick(sch); }} 
+                                        className="flex-1 bg-alo-blue hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 text-center"
+                                    >
+                                        Pesan Pelatihan
+                                    </button>
+                                    {/* 🔥 PERBAIKAN: tombol Share → stopPropagation */}
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); openShareModal(sch.course, 'course', sch.id); }} 
+                                        className="w-12 h-12 flex-shrink-0 rounded-xl bg-blue-50 text-alo-blue flex items-center justify-center hover:bg-alo-blue hover:text-white transition-all shadow-sm" 
+                                        title="Bagikan Pelatihan"
+                                    >
+                                        <span className="material-symbols-outlined text-[22px]">share</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+}
                     case 'Pengajar': {
                         // PENGAJAR LIST dengan thumbnail + grid foto
                         const galleryPhotos = gallery.slice(0, 4);
