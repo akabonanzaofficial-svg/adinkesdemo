@@ -635,46 +635,96 @@
             </div>
 
             {/* STRUKTUR ORGANISASI */}
-            <div className="pt-8 border-t border-slate-200">
-                <div className="text-center mb-10">
-                    <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
-                    <p className="text-slate-500">Keberhasilan lembaga kami didukung oleh jajaran pimpinan dan manajemen yang kompeten.</p>
-                </div>
-                {strukturLoading ? (
-                    <div className="text-center py-8"><span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span></div>
-                ) : struktur.length === 0 ? (
-                    <p className="text-center text-slate-400 py-8">Belum ada data struktur organisasi.</p>
-                ) : (
-                    <div className="flex flex-col items-center space-y-8">
-                        {struktur.filter(s => s.type === 'Pimpinan').length > 0 && (
-                            <div className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-md border border-slate-100 text-center relative">
-                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-alo-blue rounded-full flex items-center justify-center text-white shadow-lg">
-                                    <span className="material-symbols-outlined text-[24px]">group</span>
-                                </div>
-                                <h4 className="text-lg font-bold text-slate-800 mt-4">{struktur.filter(s => s.type === 'Pimpinan')[0]?.name || 'Nama Pimpinan'}</h4>
-                                <p className="text-alo-blue font-semibold text-sm">{struktur.filter(s => s.type === 'Pimpinan')[0]?.role || 'Jabatan'}</p>
-                            </div>
-                        )}
-                        <div className="w-px h-8 bg-slate-300"></div>
-                        <div className="w-full max-w-2xl h-px bg-slate-300 relative">
-                            <div className="absolute left-0 top-0 w-px h-8 bg-slate-300"></div>
-                            <div className="absolute right-0 top-0 w-px h-8 bg-slate-300"></div>
-                            <div className="absolute left-1/2 top-0 w-px h-8 bg-slate-300"></div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl pt-8">
-                            {struktur.filter(s => s.type !== 'Pimpinan').map(person => (
-                                <div key={person.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow">
-                                    <h4 className="font-bold text-slate-800">{person.name}</h4>
-                                    <p className="text-teal-600 text-sm mt-1">{person.role}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+<div className="pt-8 border-t border-slate-200">
+    <div className="text-center mb-10">
+        <h3 className="text-2xl font-bold text-slate-800 mb-3">Susunan Organisasi</h3>
+        <p className="text-slate-500">Jajaran pengurus, manajemen, dan tim pendukung lembaga kami.</p>
+    </div>
+
+    {strukturLoading ? (
+        <div className="text-center py-8">
+            <span className="material-symbols-outlined animate-spin text-4xl text-alo-blue">progress_activity</span>
         </div>
-    );
-}
+    ) : struktur.length === 0 ? (
+        <p className="text-center text-slate-400 py-8">Belum ada data struktur organisasi.</p>
+    ) : (
+        <div className="max-w-3xl mx-auto space-y-6">
+            
+            {/* 1. LEVEL PERTIMBANGAN / AHLI */}
+            {struktur.filter(s => s.type === 'Pertimbangan' || s.type === 'Ahli').length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-amber-500">workspace_premium</span>
+                        Dewan Pertimbangan / Ahli
+                    </h4>
+                    <ul className="divide-y divide-slate-100">
+                        {struktur.filter(s => s.type === 'Pertimbangan' || s.type === 'Ahli').map(person => (
+                            <li key={person.id} className="py-3 flex justify-between items-center text-sm gap-4">
+                                <span className="font-semibold text-slate-800">{person.name}</span>
+                                <span className="text-amber-700 bg-amber-50 px-3 py-1 rounded-full text-xs font-medium shrink-0">{person.role}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {/* 2. LEVEL PIMPINAN */}
+            {struktur.filter(s => s.type === 'Pimpinan').length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-alo-blue">account_circle</span>
+                        Level Pimpinan (Direktur & Setingkat)
+                    </h4>
+                    <ul className="divide-y divide-slate-100">
+                        {struktur.filter(s => s.type === 'Pimpinan').map(person => (
+                            <li key={person.id} className="py-3 flex justify-between items-center text-sm gap-4">
+                                <span className="font-semibold text-slate-800">{person.name}</span>
+                                <span className="text-alo-blue bg-blue-50 px-3 py-1 rounded-full text-xs font-medium shrink-0">{person.role}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {/* 3. LEVEL MANAJERIAL */}
+            {struktur.filter(s => s.type === 'Manajerial').length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-teal-600">manage_accounts</span>
+                        Level Manajerial
+                    </h4>
+                    <ul className="divide-y divide-slate-100">
+                        {struktur.filter(s => s.type === 'Manajerial').map(person => (
+                            <li key={person.id} className="py-3 flex justify-between items-center text-sm gap-4">
+                                <span className="font-semibold text-slate-800">{person.name}</span>
+                                <span className="text-teal-600 bg-teal-50 px-3 py-1 rounded-full text-xs font-medium shrink-0">{person.role}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {/* 4. LEVEL TEAM SUPPORT */}
+            {struktur.filter(s => s.type === 'Team Support' || s.type === 'TeamSupport' || s.type === 'teamsupport').length > 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h4 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-slate-500">groups</span>
+                        Team Support
+                    </h4>
+                    <ul className="divide-y divide-slate-100">
+                        {struktur.filter(s => s.type === 'Team Support' || s.type === 'TeamSupport' || s.type === 'teamsupport').map(person => (
+                            <li key={person.id} className="py-3 flex justify-between items-center text-sm gap-4">
+                                <span className="font-semibold text-slate-800">{person.name}</span>
+                                <span className="text-slate-600 bg-slate-100 px-3 py-1 rounded-full text-xs font-medium shrink-0">{person.role}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+        </div>
+    )}
+</div>
 
                     case 'Program': {
                         // PROGRAM LIST dengan icon + grid foto
