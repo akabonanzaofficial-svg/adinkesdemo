@@ -792,7 +792,7 @@
                 <p className="text-slate-500">Pilih acara yang Anda inginkan, lihat detail, dan amankan kursi Anda.</p>
             </div>
             <div className="flex flex-wrap justify-center gap-2 mb-8">
-                {['Pelatihan', 'Webinar', 'Workshop'].map(category => (
+                {['Pelatihan', 'Seminar/Webinar', 'Workshop'].map(category => (
                     <button key={category} onClick={() => { setScheduleCategory(category); setExpandedScheduleId(null); }} className={`px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm ${scheduleCategory === category ? 'bg-alo-blue text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
                         {category}
                     </button>
