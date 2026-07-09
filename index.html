@@ -316,7 +316,7 @@
     isOpen: true, 
     title: item.title, 
     content: item.content || 'Belum ada konten lengkap.', 
-    img: item.img_url, // Diubah dari item.img menjadi item.img_url
+    img: item.img, // Diubah dari item.img menjadi item.img
     category: item.category, 
     date: item.date 
   });
@@ -938,10 +938,10 @@
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {news.map((item) => (
           <div key={item.id} onClick={() => openArticle(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col cursor-pointer group">
-            {/* Menggunakan item.img_url dari database, jika kosong gunakan gambar placeholder */}
+            {/* Menggunakan item.img dari database, jika kosong gunakan gambar placeholder */}
             <div className="h-48 overflow-hidden relative">
               <img 
-                src={item.img_url || 'https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?q=80&w=500'} 
+                src={item.img || 'https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?q=80&w=500'} 
                 alt={item.title} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
               />
