@@ -1203,7 +1203,7 @@
                                     <img src={articleModal.img} alt={articleModal.title} className="w-full h-64 object-cover rounded-2xl" />
                                     <div className="flex justify-between items-center"><span className="text-xs font-bold text-alo-blue bg-blue-50 px-3 py-1 rounded-full">{articleModal.category}</span><span className="text-sm text-slate-400">{articleModal.date}</span></div>
                                     <h2 className="text-2xl font-bold text-slate-800">{articleModal.title}</h2>
-                                    <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed whitespace-pre-line">{articleModal.content}</div>
+                                    <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: articleModal.content }} />
                                 </div>
                             </div>
                         </div>
