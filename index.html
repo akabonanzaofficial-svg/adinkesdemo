@@ -227,36 +227,79 @@
                 updateURL('Jadwal', course.id);
             };
 
-            const handleFormSubmit = async (e) => {
-                e.preventDefault();
-                if (isSubmitting) return;
-                setIsSubmitting(true);
-                const form = e.target;
-                const nama = form.nama.value.trim();
-                const wa = form.wa.value.trim();
-                if (!nama || !wa) {
-                    alert('Harap isi semua field.');
-                    setIsSubmitting(false);
-                    return;
-                }
-                const { error } = await supabase
-                    .from('registrations')
-                    .insert([{ schedule_id: selectedCourse.id, nama_peserta: nama, whatsapp: wa, status_pembayaran: 'Menunggu Pembayaran' }]);
-                if (error) {
-                    console.error('Error saving registration:', error);
-                    alert('Gagal menyimpan pemesanan. Silakan coba lagi.');
-                    setIsSubmitting(false);
-                    return;
-                }
-                setIsBooked(true);
-                setIsSubmitting(false);
-                setTimeout(() => {
-                    setIsModalOpen(false);
-                    setIsBooked(false);
-                    updateURL('Jadwal');
-                }, 3000);
-            };
+            ```javascript
+const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
+    const form = e.target;
+    const nama = form.nama.value.trim();
+    const wa = form.wa.value.trim();
+    const fileBukti = form.bukti_transfer.files[0]; // Baris baru untuk mengambil file
+
+    // Validasi input
+    if (!nama || !wa || !fileBukti) {
+        alert('Harap isi semua field dan unggah bukti transfer.');
+        setIsSubmitting(false);
+        return;
+    }
+
+    try {
+        // A. Upload file bukti transfer ke Supabase Storage
+        const fileExt = fileBukti.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+        const { data: storageData, error: storageError } = await supabase
+            .storage
+            .from('bukti-transfer')
+            .upload(fileName, fileBukti);
+
+        if (storageError) {
+            console.error('Error uploading file:', storageError);
+            alert('Gagal mengunggah bukti transfer: ' + storageError.message);
+            setIsSubmitting(false);
+            return;
+        }
+
+        // B. Dapatkan Public URL file-nya
+        const { data: { publicUrl } } = supabase
+            .storage
+            .from('bukti-transfer')
+            .getPublicUrl(fileName);
+
+        // C. Simpan data pendaftaran ke tabel registrations
+        const { error: dbError } = await supabase
+            .from('registrations')
+            .insert([{ 
+                schedule_id: selectedCourse.id, 
+                nama_peserta: nama, 
+                whatsapp: wa, 
+                status_pembayaran: 'Menunggu Cek', // Diubah agar admin tahu perlu dicek
+                bukti_transfer_url: publicUrl 
+            }]);
+
+        if (dbError) {
+            console.error('Error saving registration:', dbError);
+            alert('Gagal menyimpan pemesanan ke database. Silakan coba lagi.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        setIsBooked(true);
+
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        alert('Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.');
+    } finally {
+        setIsSubmitting(false);
+        setTimeout(() => {
+            setIsModalOpen(false);
+            setIsBooked(false);
+            updateURL('Jadwal');
+        }, 3000);
+    }
+};
             // --- SHARE ---
             const openShareModal = (title, type = 'course', id = null) => {
                 let url = window.location.origin + window.location.pathname;
@@ -1171,6 +1214,19 @@
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Nomor WhatsApp Aktif</label>
                             <input required type="tel" name="wa" className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-alo-blue focus:ring-1 focus:ring-alo-blue" placeholder="0812..." />
                         </div>
+                        <div>
+    <label className="block text-sm font-semibold text-slate-700 mb-1">
+        Unggah Bukti Transfer <span className="text-red-500">*</span>
+    </label>
+    <input 
+        required 
+        type="file" 
+        name="bukti_transfer" 
+        accept="image/jpeg, image/png, application/pdf"
+        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-alo-blue focus:ring-1 focus:ring-alo-blue text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-alo-blue hover:file:bg-blue-100 cursor-pointer" 
+    />
+    <p className="text-[11px] text-slate-400 mt-1">Format dokumen wajib berupa gambar (JPG/PNG) atau PDF.</p>
+</div>
                         <button type="submit" disabled={isSubmitting} className="w-full mt-4 bg-alo-blue hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-50">
                             {isSubmitting ? 'Memproses...' : 'Proses Reservasi'}
                         </button>
