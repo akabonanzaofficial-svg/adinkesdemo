@@ -251,7 +251,7 @@
 
         const { data: storageData, error: storageError } = await supabase
             .storage
-            .from('bukti-transfer')
+            .from('BUKTI-TRANSFER')
             .upload(fileName, fileBukti);
 
         if (storageError) {
@@ -264,7 +264,7 @@
         // B. Dapatkan Public URL file-nya
         const { data: { publicUrl } } = supabase
             .storage
-            .from('bukti-transfer')
+            .from('BUKTI-TRANSFER')
             .getPublicUrl(fileName);
 
         // C. Simpan data pendaftaran ke tabel registrations
