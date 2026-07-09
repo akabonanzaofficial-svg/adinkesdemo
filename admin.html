@@ -398,8 +398,8 @@
                 }
             };
 
-            const fetchAllData = async () => {
-                setLoading(true);
+            const fetchAllData = async (initial = false) => {
+                if (initial) setLoading(true);
                 try {
                     const [programsRes, schedulesRes, instructorsRes, newsRes, galleryRes, registrationsRes] = await Promise.all([
                         supabase.from('programs').select('*').order('id', { ascending: true }),
@@ -420,7 +420,11 @@
                     await fetchProfile();
                     await fetchStruktur();
 
-                } catch (err) { console.error('Gagal fetch data:', err); } finally { setLoading(false); }
+                } catch (err) {
+    console.error('Gagal fetch data:', err);
+} finally {
+    if (initial) setLoading(false);
+}
             };
 
             // --- CRUD ---
