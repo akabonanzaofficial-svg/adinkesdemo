@@ -35,9 +35,10 @@
     <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased overflow-hidden">
     <div id="root"></div>
@@ -246,6 +247,7 @@
 
             // UI
             const [activeMenu, setActiveMenu] = useState('Dashboard');
+            const [kategoriEkspor, setKategoriEkspor] = useState('Semua'); // <-- TAMBAHKAN BARIS INI
             const [jadwalTab, setJadwalTab] = useState('Pelatihan');
             const [activeModal, setActiveModal] = useState(null);
             const [toastMessage, setToastMessage] = useState('');
@@ -579,7 +581,71 @@
                 setRegistrations(newData);
                 showToast('Sertifikat berhasil diupload!');
             };
+            // ==========================================
+// FUNGSI BARU: HAPUS REGISTRASI/PESERTA
+// ==========================================
+const deleteRegistration = async (id) => {
+    // Tampilkan konfirmasi agar tidak sengaja terhapus
+    if (!confirm('Apakah Anda yakin ingin menghapus data peserta ini secara permanen dari database?')) return;
+    
+    // Hapus data di tabel 'registrations' Supabase berdasarkan ID
+    const { error } = await supabase.from('registrations').delete().eq('id', id);
+    
+    if (error) {
+        showToast('Gagal menghapus data: ' + error.message);
+        return;
+    }
+    
+    // Perbarui state lokal agar data langsung hilang dari layar tanpa reload
+    setRegistrations(registrations.filter(reg => reg.id !== id));
+    showToast('Data peserta berhasil dihapus secara permanen.');
+};
 
+// ==========================================
+// FUNGSI BARU: EKSPOR DATA KE EXCEL per KATEGORI
+// ==========================================
+const exportPesertaToExcel = () => {
+    // 1. Filter data registrasi berdasarkan kategori pelatihan yang dipilih di UI
+    let dataFiltered = registrations;
+    if (kategoriEkspor !== 'Semua') {
+        dataFiltered = registrations.filter(reg => {
+            const schedule = schedules.find(s => s.id === reg.schedule_id);
+            return schedule && schedule.course === kategoriEkspor;
+        });
+    }
+
+    // Validasi jika data kosong setelah difilter
+    if (dataFiltered.length === 0) {
+        alert(`Tidak ada data peserta untuk kategori pelatihan: "${kategoriEkspor}"`);
+        return;
+    }
+
+    // 2. Format ulang data agar rapi dan berkop bahasa Indonesia di file Excel
+    const dataFormatted = dataFiltered.map((reg, index) => {
+        const schedule = schedules.find(s => s.id === reg.schedule_id);
+        return {
+            "No": index + 1,
+            "Nama Peserta": reg.nama_peserta || 'Tamu',
+            "No. WhatsApp/Telepon": reg.whatsapp || '-',
+            "Program Pelatihan / Acara": schedule ? schedule.course : 'Tidak ditemukan',
+            "Jadwal Pelaksanaan": schedule ? schedule.date : '-',
+            "Status Pembayaran": reg.status_pembayaran || '-',
+            "Tanggal Mendaftar": new Date(reg.created_at).toLocaleDateString('id-ID') + ' ' + new Date(reg.created_at).toLocaleTimeString('id-ID')
+        };
+    });
+
+    // 3. Eksekusi pembuatan file Excel menggunakan library SheetJS
+    const worksheet = XLSX.utils.json_to_sheet(dataFormatted);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Peserta");
+    
+    // Buat nama file secara dinamis berdasarkan kategori & tanggal hari ini
+    const formatTanggal = new Date().toISOString().split('T')[0];
+    const namaFile = `Data_Peserta_${kategoriEkspor.replace(/\s+/g, '_')}_${formatTanggal}.xlsx`;
+    
+    // Download file otomatis ke komputer
+    XLSX.writeFile(workbook, namaFile);
+};
             // --- MODAL OPEN ---
             const openProgramModal = (data = null) => {
                 if (data) { setProgramForm({ title: data.title, description: data.description || '', icon: data.icon || 'auto_stories', modul_url: data.modul_url || '' }); setEditingProgramId(data.id); } else { resetProgramForm(); }
@@ -798,20 +864,48 @@
 
             // --- RENDER PESERTA ---
 const renderPeserta = () => {
+    const renderPeserta = () => {
     const registrationsWithDetails = registrations.map(reg => {
         const schedule = schedules.find(s => s.id === reg.schedule_id);
         return { ...reg, schedule };
     });
 
+    // Mengambil semua list nama pelatihan unik dari database untuk dimasukkan ke opsi dropdown
+    const uniqueCourses = [...new Set(schedules.map(s => s.course))].filter(Boolean);
+
     return (
         <div className="space-y-6 animate-fade-in flex flex-col h-full">
-            <div className="flex justify-between items-center">
+            {/* Bagian Header Menu Utama */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800">Data Peserta & Registrasi</h2>
-                    <p className="text-slate-500 text-sm">Kelola pendaftaran, verifikasi pembayaran, dan e-sertifikat peserta.</p>
+                    <p className="text-slate-500 text-sm">Kelola pendaftaran, verifikasi pembayaran, ekspor data, dan hapus peserta.</p>
+                </div>
+                
+                {/* --- PANEL DOCK FILTER KATEGORI & TOMBOL EKSPOR EXCEL --- */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+                    <select 
+                        value={kategoriEkspor} 
+                        onChange={(e) => setKategoriEkspor(e.target.value)}
+                        className="px-3 py-2 border border-slate-300 rounded-xl bg-white text-sm font-medium focus:ring-2 focus:ring-alo-blue focus:outline-none shadow-sm cursor-pointer"
+                    >
+                        <option value="Semua">Semua Kategori Pelatihan</option>
+                        {uniqueCourses.map((courseName, idx) => (
+                            <option key={idx} value={courseName}>{courseName}</option>
+                        ))}
+                    </select>
+                    
+                    <button 
+                        onClick={exportPesertaToExcel} 
+                        className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2 shadow-sm transition-colors whitespace-nowrap"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">download</span>
+                        Ekspor Excel
+                    </button>
                 </div>
             </div>
-            
+
+            {/* Bagian Tabel Data */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse min-w-[900px]">
@@ -819,7 +913,6 @@ const renderPeserta = () => {
                             <tr className="bg-white border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
                                 <th className="p-4 font-semibold">Data Peserta</th>
                                 <th className="p-4 font-semibold">Program & Jadwal</th>
-                                {/* TAMBAHAN: Kolom Header Bukti Transfer */}
                                 <th className="p-4 font-semibold text-center">Bukti Transfer</th>
                                 <th className="p-4 font-semibold text-center">Status Pembayaran</th>
                                 <th className="p-4 font-semibold text-center">E-Sertifikat</th>
@@ -839,8 +932,6 @@ const renderPeserta = () => {
                                         <p className="font-semibold text-alo-blue">{reg.schedule?.course || 'Program tidak ditemukan'}</p>
                                         <p className="text-slate-500 text-xs">{reg.schedule?.date || '-'}</p>
                                     </td>
-                                    
-                                    {/* TAMBAHAN: Tampilan Tombol/Link Bukti Transfer */}
                                     <td className="p-4 text-center">
                                         {reg.bukti_transfer_url ? (
                                             <a href={reg.bukti_transfer_url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-50 text-alo-blue rounded border border-blue-200 hover:bg-blue-100 font-semibold text-xs flex items-center gap-1 mx-auto transition-colors w-max">
@@ -850,47 +941,61 @@ const renderPeserta = () => {
                                             <span className="text-slate-400 text-xs border border-slate-200 px-2 py-1 rounded bg-slate-50">Belum Upload</span>
                                         )}
                                     </td>
-                                    
                                     <td className="p-4 text-center">
-                                        {reg.status_pembayaran === 'Lunas' ? 
-                                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 border border-green-200">Lunas</span> : 
-                                            reg.status_pembayaran === 'Selesai' ? 
-                                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Selesai</span> : 
+                                        {reg.status_pembayaran === 'Lunas' ? (
+                                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 border border-green-200">Lunas</span>
+                                        ) : reg.status_pembayaran === 'Selesai' ? (
+                                            <span className="px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Selesai</span>
+                                        ) : (
                                             <span className="px-3 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700 border border-orange-200">Menunggu Cek</span>
-                                        }
+                                        )}
                                     </td>
                                     <td className="p-4 text-center">
-                                        {reg.sertifikat_url ? 
+                                        {reg.sertifikat_url ? (
                                             <div className="flex justify-center items-center gap-1">
                                                 <span className="material-symbols-outlined text-green-500 text-[18px]">workspace_premium</span>
                                                 <span className="text-xs font-bold text-green-600">Tersedia</span>
-                                            </div> : 
-                                            reg.status_pembayaran === 'Lunas' ? 
+                                            </div>
+                                        ) : reg.status_pembayaran === 'Lunas' ? (
                                             <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-50 text-alo-blue rounded border border-blue-200 hover:bg-blue-100 font-semibold text-xs flex items-center gap-1 mx-auto transition-colors">
                                                 <span className="material-symbols-outlined text-[14px]">upload</span> Upload
-                                            </button> : 
+                                            </button>
+                                        ) : (
                                             <span className="text-slate-400 text-xs">-</span>
-                                        }
+                                        )}
                                     </td>
+                                    
+                                    {/* --- DUA ACTION UTAMA: APPROVE & HAPUS DATA --- */}
                                     <td className="p-4 text-center">
-                                        {reg.status_pembayaran === 'Menunggu Cek' || reg.status_pembayaran === 'Menunggu Pembayaran' ? 
-                                            <button onClick={() => approvePayment(reg.id)} className="px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors">
-                                                <span className="material-symbols-outlined text-[14px]">check_circle</span> Approve
-                                            </button> : 
-                                            reg.status_pembayaran === 'Lunas' && !reg.sertifikat_url ? 
-                                            <button onClick={() => openSertifikatModal(reg)} className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-xs flex items-center gap-1 mx-auto shadow-sm transition-colors">
-                                                <span className="material-symbols-outlined text-[14px]">upload</span> Upload
-                                            </button> : 
-                                            <span className="text-slate-400 text-xs">-</span>
-                                        }
+                                        <div className="flex flex-col items-center gap-2">
+                                            {reg.status_pembayaran === 'Menunggu Cek' || reg.status_pembayaran === 'Menunggu Pembayaran' ? (
+                                                <button onClick={() => approvePayment(reg.id)} className="w-24 justify-center px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 font-semibold text-xs flex items-center gap-1 shadow-sm transition-colors">
+                                                    <span className="material-symbols-outlined text-[14px]">check_circle</span> Approve
+                                                </button>
+                                            ) : reg.status_pembayaran === 'Lunas' && !reg.sertifikat_url ? (
+                                                <button onClick={() => openSertifikatModal(reg)} className="w-24 justify-center px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 font-semibold text-xs flex items-center gap-1 shadow-sm transition-colors">
+                                                    <span className="material-symbols-outlined text-[14px]">upload</span> Upload
+                                                </button>
+                                            ) : (
+                                                <span className="text-slate-400 text-xs">-</span>
+                                            )}
+                                            
+                                            {/* TOMBOL ACTION HAPUS DATA PESERTA */}
+                                            <button 
+                                                onClick={() => deleteRegistration(reg.id)} 
+                                                className="w-24 justify-center px-3 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 font-semibold text-xs flex items-center gap-1 transition-colors border border-red-200"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">delete</span> Hapus
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
-                            {registrationsWithDetails.length === 0 && 
+                            {registrationsWithDetails.length === 0 && (
                                 <tr>
                                     <td colSpan="6" className="p-8 text-center text-slate-400">Belum ada registrasi/pemesanan.</td>
                                 </tr>
-                            }
+                            )}
                         </tbody>
                     </table>
                 </div>
